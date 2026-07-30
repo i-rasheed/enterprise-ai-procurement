@@ -7,6 +7,10 @@ export class UsersService {
     private readonly userRepository: UserRepository,
   ) {}
 
+  async findById(id: string) {
+    return this.userRepository.findById(id);
+  }
+
   async findByEmail(email: string) {
     return this.userRepository.findByEmail(email);
   }
@@ -18,5 +22,9 @@ export class UsersService {
     passwordHash: string;
   }) {
     return this.userRepository.create(data);
+  }
+
+  async update(id: string, data: any) {
+    return this.userRepository.update(id, data);
   }
 }
