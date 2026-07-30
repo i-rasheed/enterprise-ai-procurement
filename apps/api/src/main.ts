@@ -36,7 +36,15 @@ async function bootstrap() {
     .setTitle('Enterprise AI Procurement API')
     .setDescription('Enterprise Procurement Management Platform API')
     .setVersion('1.0.0')
-    .addBearerAuth()
+    .addBearerAuth(
+  {
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT',
+    description: 'Enter JWT access token',
+  },
+  'JWT-auth',
+)
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
