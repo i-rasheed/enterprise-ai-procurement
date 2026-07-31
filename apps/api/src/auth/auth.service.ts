@@ -1,76 +1,241 @@
 import {
   ConflictException,
   Injectable,
-   UnauthorizedException,
+  UnauthorizedException,
 } from '@nestjs/common';
-import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { User, Role } from '@prisma/client';
+import * as argon2 from 'argon2';
 import { type StringValue } from 'ms';
+import ms from 'ms';
+import { randomUUID } from 'crypto';
+
+import { toSafeUser } from '../common/utils/user.util';
+import { PrismaService } from '../database/prisma.service';
+import { toOrganisationSlug } from '../organisations/utils/organisation-slug.util';
+import { UsersService } from '../users/users.service';
+import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterDto } from './dto/register.dto';
+import { RefreshTokenRepository } from './refresh-token.repository';
+import { RefreshTokenPayload } from './types/refresh-token-payload.interface';
+import { createTokenId, hashToken } from './utils/token.util';
+
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+    private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {}
 
   async register(dto: RegisterDto) {
-    const existingUser = await this.usersService.findByEmail(dto.email);
+    const slug = toOrganisationSlug(dto.organisationName);
 
-    if (existingUser) {
-      throw new ConflictException('Email already exists');
+    const existingOrganisation = await this.prisma.organisation.findUnique({
+      where: { slug },
+    });
+
+    if (existingOrganisation) {
+      throw new ConflictException('Organisation slug already exists');
     }
 
     const passwordHash = await argon2.hash(dto.password);
 
-    const user = await this.usersService.create({
-      email: dto.email,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-      passwordHash,
+    const result = await this.prisma.$transaction(async (tx) => {
+      const organisation = await tx.organisation.create({
+        data: {
+          name: dto.organisationName,
+          slug,
+        },
+      });
+
+      const user = await tx.user.create({
+        data: {
+          email: dto.email,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          passwordHash,
+          role: Role.ADMIN,
+          organisationId: organisation.id,
+        },
+      });
+
+      return { organisation, user };
     });
 
-    const { passwordHash: _, ...result } = user;
+    const tokens = await this.createTokenPair(
+      result.user,
+      result.organisation.slug,
+    );
 
-    return result;
+    return {
+      user: tokens.user,
+      organisation: {
+        id: result.organisation.id,
+        name: result.organisation.name,
+        slug: result.organisation.slug,
+      },
+      organisationSlug: result.organisation.slug,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 
   async login(dto: LoginDto) {
-  const user = await this.usersService.findByEmail(dto.email);
+    const organisation = await this.prisma.organisation.findUnique({
+      where: { slug: dto.organisationSlug },
+    });
 
-  if (!user) {
-    throw new UnauthorizedException('Invalid credentials');
+    if (!organisation) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const user = await this.usersService.findByEmailAndOrganisation(
+      dto.email,
+      organisation.id,
+    );
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isPasswordValid = await argon2.verify(
+      user.passwordHash,
+      dto.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const tokens = await this.createTokenPair(user, organisation.slug);
+
+    return {
+      user: tokens.user,
+      organisationSlug: organisation.slug,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 
-  const isPasswordValid = await argon2.verify(
-    user.passwordHash,
-    dto.password,
-  );
+  async refresh(dto: RefreshTokenDto) {
+    const payload = await this.verifyRefreshToken(dto.refreshToken);
+    const tokenHash = hashToken(payload.jti);
+    const stored = await this.refreshTokenRepository.findByHash(tokenHash);
 
-  if (!isPasswordValid) {
-    throw new UnauthorizedException('Invalid credentials');
+    if (!stored) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (stored.revokedAt) {
+      await this.refreshTokenRepository.revokeFamily(payload.familyId);
+      throw new UnauthorizedException('Refresh token reuse detected');
+    }
+
+    if (stored.expiresAt < new Date()) {
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    await this.refreshTokenRepository.revokeById(stored.id);
+
+    const user = await this.usersService.findById(payload.sub);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const organisation = await this.prisma.organisation.findUnique({
+      where: { id: user.organisationId },
+    });
+
+    if (!organisation) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    return this.createTokenPair(user, organisation.slug, payload.familyId);
   }
 
-  const payload = {
-    sub: user.id,
-    email: user.email,
-    role: user.role,
-  };
+  async logout(dto: RefreshTokenDto) {
+    const payload = await this.verifyRefreshToken(dto.refreshToken);
+    const tokenHash = hashToken(payload.jti);
+    const stored = await this.refreshTokenRepository.findByHash(tokenHash);
 
-  const accessToken = await this.jwtService.signAsync(payload);
+    if (stored && !stored.revokedAt) {
+      await this.refreshTokenRepository.revokeById(stored.id);
+    }
 
- const refreshToken = await this.jwtService.signAsync(payload, {
-  secret: process.env.JWT_REFRESH_SECRET!,
-  expiresIn: process.env.JWT_REFRESH_EXPIRES_IN as StringValue,
-});
-  const { passwordHash, ...safeUser } = user;
+    return {
+      message: 'Logged out successfully',
+    };
+  }
 
-  return {
-    user: safeUser,
-    accessToken,
-    refreshToken,
-  };
-}
+  private async verifyRefreshToken(
+    token: string,
+  ): Promise<RefreshTokenPayload> {
+    try {
+      const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
+        token,
+        {
+          secret: process.env.JWT_REFRESH_SECRET!,
+        },
+      );
+
+      if (!payload.jti || !payload.familyId || !payload.sub) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      return payload;
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  private async createTokenPair(
+    user: User,
+    organisationSlug: string,
+    existingFamilyId?: string,
+  ) {
+    const familyId = existingFamilyId ?? randomUUID();
+    const jti = createTokenId();
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      organisationId: user.organisationId,
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload);
+
+    const refreshToken = await this.jwtService.signAsync(
+      {
+        ...payload,
+        jti,
+        familyId,
+      },
+      {
+        secret: process.env.JWT_REFRESH_SECRET!,
+        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN as StringValue,
+      },
+    );
+
+    const refreshExpiresIn = (process.env.JWT_REFRESH_EXPIRES_IN ??
+      '7d') as StringValue;
+
+    await this.refreshTokenRepository.create({
+      userId: user.id,
+      tokenHash: hashToken(jti),
+      familyId,
+      expiresAt: new Date(Date.now() + ms(refreshExpiresIn)),
+    });
+
+    return {
+      user: toSafeUser(user),
+      organisationSlug,
+      accessToken,
+      refreshToken,
+    };
+  }
 }
