@@ -38,7 +38,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Register a new tenant',
     description:
-      'Creates a new organisation and its first admin user. Returns organisationSlug for future logins.',
+      'Creates a new organisation and its first admin user. Email must be globally unique.',
   })
   @ApiBody({
     type: RegisterDto,
@@ -46,13 +46,14 @@ export class AuthController {
     examples: {
       acmeCorp: {
         summary: 'Register Acme Corp',
-        description: 'Creates tenant "Acme Corp" with slug acme-corp',
+        description:
+          'Creates tenant "Acme Corp" with the registering user as admin',
         value: registerRequestExample,
       },
       globex: {
         summary: 'Register Globex Procurement',
         description:
-          'Creates tenant "Globex Procurement" with slug globex-procurement',
+          'Creates tenant "Globex Procurement" with the registering user as admin',
         value: registerProcurementRequestExample,
       },
     },
@@ -62,7 +63,7 @@ export class AuthController {
     type: RegisterResponseDto,
     schema: { example: registerResponseExample },
   })
-  @ApiConflictResponse({ description: 'Organisation slug already exists' })
+  @ApiConflictResponse({ description: 'Email already registered' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -70,17 +71,16 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Login to a tenant',
+    summary: 'Login',
     description:
-      'Authenticates a user within a specific organisation tenant using organisationSlug.',
+      'Authenticates a user with email and password. Organisation context comes from the user record.',
   })
   @ApiBody({
     type: LoginDto,
-    description: 'Tenant-scoped login credentials',
+    description: 'Login credentials',
     examples: {
       acmeAdmin: {
         summary: 'Login as Acme admin',
-        description: 'Use organisationSlug from registration response',
         value: loginRequestExample,
       },
     },

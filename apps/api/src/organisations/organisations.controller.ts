@@ -36,12 +36,12 @@ import { OrganisationsService } from './organisations.service';
 
 @ApiTags('organisations')
 @ApiBearerAuth('JWT-auth')
-@Controller('organisations')
+@Controller('organisations/me')
 @UseGuards(JwtAuthGuard, TenantGuard)
 export class OrganisationsController {
   constructor(private readonly organisationsService: OrganisationsService) {}
 
-  @Get('me')
+  @Get()
   @ApiOperation({
     summary: 'Get current tenant organisation',
     description:
@@ -56,12 +56,12 @@ export class OrganisationsController {
   @ApiForbiddenResponse({ description: 'Missing tenant context in JWT' })
   @ApiNotFoundResponse({ description: 'Organisation not found' })
   getCurrent(@CurrentUser() user: JwtPayload) {
-    return this.organisationsService.findCurrentTenant(user.organisationId);
+    return this.organisationsService.findCurrentTenant(user.organisationId!);
   }
 
-  @Patch('me')
+  @Patch()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.PROCUREMENT_MANAGER)
+  @Roles(Role.ADMIN, Role.PROCUREMENT_MANAGER, Role.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Update current tenant organisation',
     description:
@@ -95,14 +95,14 @@ export class OrganisationsController {
     @Body() dto: UpdateOrganisationDto,
   ) {
     return this.organisationsService.updateCurrentTenant(
-      user.organisationId,
+      user.organisationId!,
       dto,
     );
   }
 
-  @Delete('me')
+  @Delete()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Delete current tenant organisation',
     description:
@@ -115,7 +115,7 @@ export class OrganisationsController {
   })
   @ApiForbiddenResponse({ description: 'Insufficient permissions' })
   async deleteCurrent(@CurrentUser() user: JwtPayload) {
-    await this.organisationsService.deleteCurrentTenant(user.organisationId);
+    await this.organisationsService.deleteCurrentTenant(user.organisationId!);
 
     return deleteOrganisationResponseExample;
   }

@@ -29,6 +29,12 @@ export type OrganisationWithUsers = Organisation & {
 export class OrganisationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  findAll(): Promise<Organisation[]> {
+    return this.prisma.organisation.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   findById(id: string): Promise<OrganisationWithUsers | null> {
     return this.prisma.organisation.findUnique({
       where: { id },
@@ -36,7 +42,7 @@ export class OrganisationRepository {
     });
   }
 
-  create(data: Pick<Organisation, 'name' | 'slug'>) {
+  create(data: Pick<Organisation, 'name'>) {
     return this.prisma.organisation.create({
       data,
       include: organisationInclude,

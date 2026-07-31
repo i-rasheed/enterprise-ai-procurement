@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
 export class SafeUserResponseDto {
@@ -20,8 +20,8 @@ export class SafeUserResponseDto {
   @ApiProperty({ example: false })
   isVerified: boolean;
 
-  @ApiProperty({ example: 'clx456def' })
-  organisationId: string;
+  @ApiPropertyOptional({ example: 'clx456def', nullable: true })
+  organisationId: string | null;
 
   @ApiProperty({ example: '2026-07-31T10:00:00.000Z' })
   createdAt: Date;
@@ -36,20 +36,11 @@ export class OrganisationSummaryDto {
 
   @ApiProperty({ example: 'Acme Corp' })
   name: string;
-
-  @ApiProperty({ example: 'acme-corp' })
-  slug: string;
 }
 
 export class TokenPairResponseDto {
   @ApiProperty({ type: SafeUserResponseDto })
   user: SafeUserResponseDto;
-
-  @ApiProperty({
-    example: 'acme-corp',
-    description: 'Tenant slug required for future logins',
-  })
-  organisationSlug: string;
 
   @ApiProperty({
     description: 'JWT access token',
@@ -69,7 +60,10 @@ export class RegisterResponseDto extends TokenPairResponseDto {
   organisation: OrganisationSummaryDto;
 }
 
-export class LoginResponseDto extends TokenPairResponseDto {}
+export class LoginResponseDto extends TokenPairResponseDto {
+  @ApiPropertyOptional({ type: OrganisationSummaryDto, nullable: true })
+  organisation?: OrganisationSummaryDto | null;
+}
 
 export class LogoutResponseDto {
   @ApiProperty({ example: 'Logged out successfully' })
