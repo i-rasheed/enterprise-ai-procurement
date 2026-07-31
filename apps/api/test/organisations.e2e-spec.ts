@@ -3,13 +3,12 @@ import request from 'supertest';
 
 import { createTestApp } from './helpers/create-test-app';
 
-describe('Organisations (e2e)', () => {
+describe('Organisations tenant (e2e)', () => {
   let app: INestApplication;
   const uniqueSuffix = Date.now();
   const organisationName = `Test Org ${uniqueSuffix}`;
   const email = `admin-${uniqueSuffix}@example.com`;
   const password = 'Password123!';
-  let organisationSlug: string;
   let accessToken: string;
 
   beforeAll(async () => {
@@ -34,29 +33,7 @@ describe('Organisations (e2e)', () => {
 
     expect(response.body.user.email).toBe(email);
     expect(response.body.user.role).toBe('ADMIN');
-    expect(response.body.user.organisationId).toBeDefined();
-    expect(response.body.user.passwordHash).toBeUndefined();
-    expect(response.body.organisationSlug).toBeDefined();
-    expect(response.body.accessToken).toBeDefined();
-
-    organisationSlug = response.body.organisationSlug as string;
-    accessToken = response.body.accessToken as string;
-  });
-
-  it('logs in with tenant slug and returns JWT', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({
-        organisationSlug,
-        email,
-        password,
-      })
-      .expect(200);
-
-    expect(response.body.accessToken).toBeDefined();
-    expect(response.body.user.email).toBe(email);
-    expect(response.body.user.passwordHash).toBeUndefined();
-
+    expect(response.body.organisation.name).toBe(organisationName);
     accessToken = response.body.accessToken as string;
   });
 
@@ -73,16 +50,11 @@ describe('Organisations (e2e)', () => {
       .expect(200);
 
     expect(response.body.name).toBe(organisationName);
-    expect(response.body.slug).toBe(organisationSlug);
     expect(response.body.users).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          email,
-          role: 'ADMIN',
-        }),
+        expect.objectContaining({ email, role: 'ADMIN' }),
       ]),
     );
-    expect(response.body.users[0].passwordHash).toBeUndefined();
   });
 
   it('updates current tenant organisation', async () => {

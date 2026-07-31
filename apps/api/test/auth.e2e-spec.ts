@@ -9,7 +9,7 @@ describe('Auth session (e2e)', () => {
   const organisationName = `Auth Org ${uniqueSuffix}`;
   const email = `auth-${uniqueSuffix}@example.com`;
   const password = 'Password123!';
-  let organisationSlug: string;
+  let organisationId: string;
   let refreshToken: string;
   let accessToken: string;
 
@@ -21,7 +21,7 @@ describe('Auth session (e2e)', () => {
     await app.close();
   });
 
-  it('registers tenant and returns organisationSlug', async () => {
+  it('registers tenant and returns organisation', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
@@ -33,29 +33,26 @@ describe('Auth session (e2e)', () => {
       })
       .expect(201);
 
-    expect(response.body.organisationSlug).toBeDefined();
-    expect(response.body.organisation.slug).toBe(
-      response.body.organisationSlug,
+    expect(response.body.organisation).toBeDefined();
+    expect(response.body.organisation.name).toBe(organisationName);
+    expect(response.body.user.organisationId).toBe(
+      response.body.organisation.id,
     );
     expect(response.body.accessToken).toBeDefined();
     expect(response.body.refreshToken).toBeDefined();
 
-    organisationSlug = response.body.organisationSlug as string;
+    organisationId = response.body.organisation.id as string;
     refreshToken = response.body.refreshToken as string;
     accessToken = response.body.accessToken as string;
   });
 
-  it('logs in with organisationSlug from registration', async () => {
+  it('logs in with email and password only', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({
-        organisationSlug,
-        email,
-        password,
-      })
+      .send({ email, password })
       .expect(200);
 
-    expect(response.body.organisationSlug).toBe(organisationSlug);
+    expect(response.body.organisation.id).toBe(organisationId);
     refreshToken = response.body.refreshToken as string;
     accessToken = response.body.accessToken as string;
   });
@@ -71,7 +68,7 @@ describe('Auth session (e2e)', () => {
     expect(response.body.accessToken).toBeDefined();
     expect(response.body.refreshToken).toBeDefined();
     expect(response.body.refreshToken).not.toBe(oldRefreshToken);
-    expect(response.body.organisationSlug).toBe(organisationSlug);
+    expect(response.body.user.organisationId).toBe(organisationId);
 
     refreshToken = response.body.refreshToken as string;
     accessToken = response.body.accessToken as string;

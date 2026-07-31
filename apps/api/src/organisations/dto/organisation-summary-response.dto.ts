@@ -1,9 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { SafeUserResponseDto } from '../../auth/dto/auth-response.dto';
-
-export class OrganisationResponseDto {
-  @ApiProperty({ example: 'clx789ghi' })
+export class OrganisationSummaryResponseDto {
+  @ApiProperty({ example: 'clx789ghi012jkl' })
   id: string;
 
   @ApiProperty({ example: 'Acme Corp' })
@@ -14,7 +12,9 @@ export class OrganisationResponseDto {
 
   @ApiProperty({ example: '2026-07-31T10:00:00.000Z' })
   updatedAt: Date;
+}
 
-  @ApiProperty({ type: [SafeUserResponseDto] })
-  users: SafeUserResponseDto[];
+export class OrganisationListResponseDto {
+  @ApiProperty({ type: [OrganisationSummaryResponseDto] })
+  organisations: OrganisationSummaryResponseDto[];
 }

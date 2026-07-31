@@ -10,11 +10,8 @@ export class UsersService {
     return this.userRepository.findById(id);
   }
 
-  async findByEmailAndOrganisation(email: string, organisationId: string) {
-    return this.userRepository.findByEmailAndOrganisation(
-      email,
-      organisationId,
-    );
+  findByEmail(email: string) {
+    return this.userRepository.findByEmail(email);
   }
 
   async update(id: string, data: Parameters<UserRepository['update']>[1]) {

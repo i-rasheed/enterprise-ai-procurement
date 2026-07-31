@@ -17,13 +17,27 @@ export const registerProcurementRequestExample = {
 };
 
 export const loginRequestExample = {
-  organisationSlug: 'acme-corp',
   email: 'admin@acme.com',
   password: 'Password123!',
 };
 
+export const createOrganisationRequestExample = {
+  name: 'Acme Corp',
+};
+
 export const updateOrganisationRequestExample = {
   name: 'Acme Corporation',
+};
+
+export const organisationListResponseExample = {
+  organisations: [
+    {
+      id: 'clx789ghi012jkl',
+      name: 'Acme Corp',
+      createdAt: '2026-07-31T10:00:00.000Z',
+      updatedAt: '2026-07-31T10:00:00.000Z',
+    },
+  ],
 };
 
 export const safeUserResponseExample = {
@@ -40,7 +54,10 @@ export const safeUserResponseExample = {
 
 export const loginResponseExample = {
   user: safeUserResponseExample,
-  organisationSlug: 'acme-corp',
+  organisation: {
+    id: 'clx789ghi012jkl',
+    name: 'Acme Corp',
+  },
   accessToken:
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxMjNhYmM0NTZkZWYiLCJlbWFpbCI6ImFkbWluQGFjbWUuY29tIiwicm9sZSI6IkFETUlOIiwib3JnYW5pc2F0aW9uSWQiOiJjbHg3ODlnaGkwMTJqa2wifQ.example',
   refreshToken:
@@ -52,9 +69,7 @@ export const registerResponseExample = {
   organisation: {
     id: 'clx789ghi012jkl',
     name: 'Acme Corp',
-    slug: 'acme-corp',
   },
-  organisationSlug: 'acme-corp',
   accessToken:
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxMjNhYmM0NTZkZWYiLCJlbWFpbCI6ImFkbWluQGFjbWUuY29tIiwicm9sZSI6IkFETUlOIiwib3JnYW5pc2F0aW9uSWQiOiJjbHg3ODlnaGkwMTJqa2wifQ.example',
   refreshToken:
@@ -73,7 +88,6 @@ export const logoutResponseExample = {
 export const organisationResponseExample = {
   id: 'clx789ghi012jkl',
   name: 'Acme Corp',
-  slug: 'acme-corp',
   createdAt: '2026-07-31T10:00:00.000Z',
   updatedAt: '2026-07-31T10:00:00.000Z',
   users: [safeUserResponseExample],
@@ -85,7 +99,7 @@ export const jwtPayloadExample = {
   role: Role.ADMIN,
   organisationId: 'clx789ghi012jkl',
   iat: 1785490670,
-  exp: 1785491570,
+  exp: 1785490670,
 };
 
 export const messageResponseExample = {

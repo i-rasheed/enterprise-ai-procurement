@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { CreateOrganisationDto } from './dto/create-organisation.dto';
 import { UpdateOrganisationDto } from './dto/update-organisation.dto';
 import { OrganisationRepository } from './organisation.repository';
 
@@ -9,9 +10,18 @@ export class OrganisationsService {
     private readonly organisationRepository: OrganisationRepository,
   ) {}
 
-  async findCurrentTenant(organisationId: string) {
-    const organisation =
-      await this.organisationRepository.findById(organisationId);
+  create(dto: CreateOrganisationDto) {
+    return this.organisationRepository.create({ name: dto.name });
+  }
+
+  async findAll() {
+    const organisations = await this.organisationRepository.findAll();
+
+    return { organisations };
+  }
+
+  async findOne(id: string) {
+    const organisation = await this.organisationRepository.findById(id);
 
     if (!organisation) {
       throw new NotFoundException('Organisation not found');
@@ -20,19 +30,35 @@ export class OrganisationsService {
     return organisation;
   }
 
+  async update(id: string, dto: UpdateOrganisationDto) {
+    await this.findOne(id);
+
+    return this.organisationRepository.update(id, { name: dto.name });
+  }
+
+  async delete(id: string) {
+    await this.findOne(id);
+
+    await this.organisationRepository.delete(id);
+
+    return {
+      message: 'Organisation deleted successfully',
+    };
+  }
+
+  async findCurrentTenant(organisationId: string) {
+    return this.findOne(organisationId);
+  }
+
   async updateCurrentTenant(
     organisationId: string,
     dto: UpdateOrganisationDto,
   ) {
-    await this.findCurrentTenant(organisationId);
-
-    return this.organisationRepository.update(organisationId, {
-      name: dto.name,
-    });
+    return this.update(organisationId, dto);
   }
 
   async deleteCurrentTenant(organisationId: string) {
-    await this.findCurrentTenant(organisationId);
+    await this.findOne(organisationId);
 
     return this.organisationRepository.delete(organisationId);
   }

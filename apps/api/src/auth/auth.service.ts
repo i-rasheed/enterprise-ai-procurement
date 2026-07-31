@@ -12,7 +12,6 @@ import { randomUUID } from 'crypto';
 
 import { toSafeUser } from '../common/utils/user.util';
 import { PrismaService } from '../database/prisma.service';
-import { toOrganisationSlug } from '../organisations/utils/organisation-slug.util';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -31,14 +30,10 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const slug = toOrganisationSlug(dto.organisationName);
+    const existingUser = await this.usersService.findByEmail(dto.email);
 
-    const existingOrganisation = await this.prisma.organisation.findUnique({
-      where: { slug },
-    });
-
-    if (existingOrganisation) {
-      throw new ConflictException('Organisation slug already exists');
+    if (existingUser) {
+      throw new ConflictException('Email already registered');
     }
 
     const passwordHash = await argon2.hash(dto.password);
@@ -47,7 +42,6 @@ export class AuthService {
       const organisation = await tx.organisation.create({
         data: {
           name: dto.organisationName,
-          slug,
         },
       });
 
@@ -65,37 +59,21 @@ export class AuthService {
       return { organisation, user };
     });
 
-    const tokens = await this.createTokenPair(
-      result.user,
-      result.organisation.slug,
-    );
+    const tokens = await this.createTokenPair(result.user);
 
     return {
       user: tokens.user,
       organisation: {
         id: result.organisation.id,
         name: result.organisation.name,
-        slug: result.organisation.slug,
       },
-      organisationSlug: result.organisation.slug,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     };
   }
 
   async login(dto: LoginDto) {
-    const organisation = await this.prisma.organisation.findUnique({
-      where: { slug: dto.organisationSlug },
-    });
-
-    if (!organisation) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const user = await this.usersService.findByEmailAndOrganisation(
-      dto.email,
-      organisation.id,
-    );
+    const user = await this.usersService.findByEmail(dto.email);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -110,11 +88,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const tokens = await this.createTokenPair(user, organisation.slug);
+    const tokens = await this.createTokenPair(user);
+    const organisation = user.organisationId
+      ? await this.prisma.organisation.findUnique({
+          where: { id: user.organisationId },
+          select: { id: true, name: true },
+        })
+      : null;
 
     return {
       user: tokens.user,
-      organisationSlug: organisation.slug,
+      organisation,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     };
@@ -146,15 +130,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const organisation = await this.prisma.organisation.findUnique({
-      where: { id: user.organisationId },
-    });
-
-    if (!organisation) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-
-    return this.createTokenPair(user, organisation.slug, payload.familyId);
+    return this.createTokenPair(user, payload.familyId);
   }
 
   async logout(dto: RefreshTokenDto) {
@@ -192,11 +168,7 @@ export class AuthService {
     }
   }
 
-  private async createTokenPair(
-    user: User,
-    organisationSlug: string,
-    existingFamilyId?: string,
-  ) {
+  private async createTokenPair(user: User, existingFamilyId?: string) {
     const familyId = existingFamilyId ?? randomUUID();
     const jti = createTokenId();
 
@@ -233,7 +205,6 @@ export class AuthService {
 
     return {
       user: toSafeUser(user),
-      organisationSlug,
       accessToken,
       refreshToken,
     };

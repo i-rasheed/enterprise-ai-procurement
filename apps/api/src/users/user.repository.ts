@@ -7,14 +7,9 @@ import { PrismaService } from '../database/prisma.service';
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByEmailAndOrganisation(email: string, organisationId: string) {
+  findByEmail(email: string) {
     return this.prisma.user.findUnique({
-      where: {
-        organisationId_email: {
-          organisationId,
-          email,
-        },
-      },
+      where: { email },
     });
   }
 
