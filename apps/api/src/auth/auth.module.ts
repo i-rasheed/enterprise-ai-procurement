@@ -7,8 +7,10 @@ import { type StringValue } from 'ms';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { RefreshTokenRepository } from './refresh-token.repository';
 import { JwtAuthGuard } from './guards/jwt/jwt.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { TenantGuard } from './guards/tenant.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -26,9 +28,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
         signOptions: {
-          expiresIn: config.getOrThrow<StringValue>(
-            'JWT_ACCESS_EXPIRES_IN',
-          ),
+          expiresIn: config.getOrThrow<StringValue>('JWT_ACCESS_EXPIRES_IN'),
         },
       }),
     }),
@@ -36,10 +36,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   controllers: [AuthController],
   providers: [
     AuthService,
+    RefreshTokenRepository,
     JwtStrategy,
     JwtAuthGuard,
     RolesGuard,
+    TenantGuard,
   ],
-  exports: [JwtModule, PassportModule, JwtAuthGuard, RolesGuard],
+  exports: [JwtModule, PassportModule, JwtAuthGuard, RolesGuard, TenantGuard],
 })
 export class AuthModule {}

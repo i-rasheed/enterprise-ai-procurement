@@ -1,36 +1,32 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+
 import { PrismaService } from '../database/prisma.service';
-import { User } from '@prisma/client';
+
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByEmail(email: string) {
+  async findByEmailAndOrganisation(email: string, organisationId: string) {
     return this.prisma.user.findUnique({
-      where: { email },
+      where: {
+        organisationId_email: {
+          organisationId,
+          email,
+        },
+      },
     });
   }
 
   async findById(id: string) {
-  return this.prisma.user.findUnique({
-    where: { id },
-  });
-}
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
+  }
 
-async update(id: string, data: Partial<User>) {
-  return this.prisma.user.update({
-    where: { id },
-    data,
-  });
-}
-
-  async create(data: {
-    email: string;
-    firstName: string;
-    lastName: string;
-    passwordHash: string;
-  }) {
-    return this.prisma.user.create({
+  async update(id: string, data: Prisma.UserUpdateInput) {
+    return this.prisma.user.update({
+      where: { id },
       data,
     });
   }

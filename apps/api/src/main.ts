@@ -1,28 +1,19 @@
 import { NestFactory } from '@nestjs/core';
-import {
-  ValidationPipe,
-  VersioningType,
-} from '@nestjs/common';
-import {
-  SwaggerModule,
-  DocumentBuilder,
-} from '@nestjs/swagger';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Global API Prefix
   app.setGlobalPrefix('api');
 
-  // API Versioning
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
   });
 
-  // Global Validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -31,25 +22,34 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger Configuration
   const config = new DocumentBuilder()
     .setTitle('Enterprise AI Procurement API')
-    .setDescription('Enterprise Procurement Management Platform API')
+    .setDescription(
+      'Multi-tenant Enterprise Procurement Management Platform API. Use the sample requests provided on each endpoint to get started quickly.',
+    )
     .setVersion('1.0.0')
     .addBearerAuth(
-  {
-    type: 'http',
-    scheme: 'bearer',
-    bearerFormat: 'JWT',
-    description: 'Enter JWT access token',
-  },
-  'JWT-auth',
-)
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Paste the accessToken returned from POST /auth/login',
+      },
+      'JWT-auth',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      defaultModelExpandDepth: 2,
+      defaultModelsExpandDepth: 2,
+      docExpansion: 'list',
+      tryItOutEnabled: true,
+    },
+  });
 
   const port = process.env.PORT ?? 3001;
 
@@ -59,4 +59,4 @@ async function bootstrap() {
   console.log(`📚 Swagger available at http://localhost:${port}/docs`);
 }
 
-bootstrap();
+void bootstrap();
