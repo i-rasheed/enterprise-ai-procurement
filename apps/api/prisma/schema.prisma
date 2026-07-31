@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,23 +11,23 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id             String         @id @default(cuid())
+  email          String
+  passwordHash   String
+  firstName      String
+  lastName       String
+  role           Role           @default(USER)
+  isVerified     Boolean        @default(false)
 
-  email        String   @unique
+  organisationId String
+  organisation   Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
 
-  passwordHash String
+  refreshTokens  RefreshToken[]
 
-  firstName    String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  lastName     String
-
-  role         Role     @default(USER)
-
-  isVerified   Boolean  @default(false)
-
-  createdAt    DateTime @default(now())
-
-  updatedAt    DateTime @updatedAt
+  @@unique([organisationId, email])
 }
 
 enum Role {
@@ -41,6 +39,23 @@ enum Role {
 model Organisation {
   id        String   @id @default(cuid())
   name      String
+  slug      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  users     User[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  familyId  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
 }
