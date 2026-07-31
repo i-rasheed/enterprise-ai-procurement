@@ -51,15 +51,12 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3001;
 
-  console.log(
-    `🚀 API running at http://localhost:${process.env.PORT ?? 3000}/api/v1`,
-  );
+  await app.listen(port);
 
-  console.log(
-    `📚 Swagger available at http://localhost:${process.env.PORT ?? 3000}/docs`,
-  );
+  console.log(`🚀 API running at http://localhost:${port}/api/v1`);
+  console.log(`📚 Swagger available at http://localhost:${port}/docs`);
 }
 
 bootstrap();
