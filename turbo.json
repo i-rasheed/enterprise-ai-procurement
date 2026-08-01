@@ -10,7 +10,8 @@
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "env": ["NODE_ENV"]
     },
     "test": {
       "dependsOn": ["^test"]
