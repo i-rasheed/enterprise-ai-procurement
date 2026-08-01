@@ -104,3 +104,21 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #po-document,
+  #po-document * {
+    visibility: visible;
+  }
+
+  #po-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
