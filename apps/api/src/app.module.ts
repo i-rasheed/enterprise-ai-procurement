@@ -21,6 +21,7 @@ import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { ContractsModule } from './contracts/contracts.module';
 import { AiModule } from './ai/ai.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AiModule } from './ai/ai.module';
     InvoicesModule,
     ContractsModule,
     AiModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

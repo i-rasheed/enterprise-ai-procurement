@@ -1253,3 +1253,162 @@ export const semanticSearchResponseExample = {
     },
   ],
 };
+
+export const executiveDashboardResponseExample = {
+  totalProcurementRequests: 48,
+  openProcurementRequests: 12,
+  completedProcurementRequests: 30,
+  activeVendors: 25,
+  approvedVendors: 18,
+  totalPurchaseOrders: 35,
+  outstandingPurchaseOrders: 8,
+  totalContracts: 10,
+  activeContracts: 6,
+  pendingApprovals: 5,
+  invoicesAwaitingApproval: 4,
+  invoicesPaid: 22,
+  goodsReceiptsPending: 3,
+  totalSpend: 1250000,
+  savingsGenerated: 85000,
+  averageProcurementCycleTimeDays: 14.5,
+  averageApprovalTimeDays: 3.2,
+  topCategories: [{ name: 'IT Hardware', value: 250000 }],
+  topVendors: [{ name: 'Globex Supplies Ltd', value: 420000 }],
+  topDepartments: [{ name: 'IT', value: 380000 }],
+  spendByCategory: {
+    type: 'pie',
+    title: 'Spend by Category',
+    labels: ['IT Hardware', 'Services'],
+    datasets: [{ label: 'Spend by Category', data: [250000, 180000] }],
+  },
+  spendByVendor: {
+    type: 'bar',
+    title: 'Spend by Vendor',
+    labels: ['Globex Supplies Ltd'],
+    datasets: [{ label: 'Spend by Vendor', data: [420000] }],
+  },
+  spendByDepartment: {
+    type: 'bar',
+    title: 'Spend by Department',
+    labels: ['IT'],
+    datasets: [{ label: 'Spend by Department', data: [380000] }],
+  },
+  budgetUtilization: 72.5,
+  monthlyProcurementTrend: {
+    type: 'time-series',
+    title: 'Monthly Procurement Requests',
+    labels: ['2026-01', '2026-02'],
+    datasets: [{ label: 'Monthly Procurement Requests', data: [8, 12] }],
+  },
+  monthlySpendTrend: {
+    type: 'time-series',
+    title: 'Monthly Spend Trend',
+    labels: ['2026-01', '2026-02'],
+    datasets: [{ label: 'Monthly Spend Trend', data: [95000, 120000] }],
+  },
+  monthlySavingsTrend: {
+    type: 'time-series',
+    title: 'Monthly Savings Trend',
+    labels: ['2026-01', '2026-02'],
+    datasets: [{ label: 'Monthly Savings Trend', data: [12000, 18000] }],
+  },
+};
+
+export const analyticsSummaryResponseExample = {
+  summary: {
+    totalSpend: 1250000,
+    invoiceCount: 45,
+    averageInvoiceValue: 27777.78,
+    savingsGenerated: 85000,
+    budgetUtilization: 72.5,
+  },
+  charts: [
+    {
+      type: 'pie',
+      title: 'Spend by Category',
+      labels: ['IT Hardware'],
+      datasets: [{ label: 'Spend by Category', data: [250000] }],
+    },
+  ],
+  kpis: {
+    savingsPercentage: 6.8,
+    budgetConsumption: 72.5,
+  },
+  pagination: { page: 1, limit: 20, total: 45, totalPages: 3 },
+};
+
+export const reportListResponseExample = [
+  { id: 'procurement', title: 'Procurement Report' },
+  { id: 'vendor', title: 'Vendor Report' },
+  { id: 'spend', title: 'Spend Report' },
+  { id: 'executive-summary', title: 'Executive Summary' },
+];
+
+export const procurementReportResponseExample = {
+  id: 'procurement',
+  title: 'Procurement Report',
+  generatedAt: '2026-08-01T14:00:00.000Z',
+  data: {
+    total: 48,
+    draft: 6,
+    submitted: 12,
+    approved: 30,
+    rejected: 0,
+    totalBudget: 1720000,
+  },
+  charts: [],
+  kpis: {
+    averageProcurementDurationDays: 14.5,
+    departmentPerformance: [
+      {
+        department: 'IT',
+        total: 15,
+        approved: 12,
+        rejected: 0,
+        approvalRate: 80,
+      },
+    ],
+  },
+};
+
+export const executiveInsightsResponseExample = {
+  topRisks: [
+    {
+      risk: 'Vendor concentration',
+      severity: 'HIGH',
+      impact: '42% spend with single vendor',
+    },
+  ],
+  spendAnomalies: [
+    {
+      area: 'Software licenses',
+      description: '15% above budget',
+      amount: 45000,
+    },
+  ],
+  savingsOpportunities: ['Consolidate IT hardware orders for volume discount'],
+  vendorConcerns: [
+    {
+      vendor: 'Globex Supplies Ltd',
+      concern: 'Partial deliveries',
+      recommendation: 'Review SLA terms',
+    },
+  ],
+  contractRisks: [
+    {
+      contract: 'CTR-2026-000001',
+      risk: 'Expiring in 90 days',
+      action: 'Initiate renewal review',
+    },
+  ],
+  approvalBottlenecks: [
+    {
+      level: 2,
+      count: 3,
+      recommendation: 'Escalate pending finance approvals',
+    },
+  ],
+  executiveSummary:
+    'Procurement spend is tracking 7% under budget with strong savings in IT hardware. Vendor concentration and pending approvals at level 2 require executive attention this quarter.',
+  provider: 'openai',
+};
