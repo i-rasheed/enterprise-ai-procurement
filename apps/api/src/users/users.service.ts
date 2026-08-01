@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma, Role } from '@prisma/client';
 
 import { UserRepository } from './user.repository';
 
@@ -10,11 +11,29 @@ export class UsersService {
     return this.userRepository.findById(id);
   }
 
-  findByEmail(email: string) {
-    return this.userRepository.findByEmail(email);
+  findFirstByEmail(email: string) {
+    return this.userRepository.findFirstByEmail(email);
   }
 
-  async update(id: string, data: Parameters<UserRepository['update']>[1]) {
+  findByEmailAndOrganisation(email: string, organisationId: string) {
+    return this.userRepository.findByEmailAndOrganisation(
+      email,
+      organisationId,
+    );
+  }
+
+  async create(data: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    passwordHash: string;
+    role: Role;
+    organisationId: string;
+  }) {
+    return this.userRepository.create(data);
+  }
+
+  async update(id: string, data: Prisma.UserUpdateInput) {
     return this.userRepository.update(id, data);
   }
 }

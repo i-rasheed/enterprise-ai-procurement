@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
-  IsNotIn,
   IsString,
   MinLength,
 } from 'class-validator';
@@ -31,9 +30,7 @@ export class InviteMemberDto {
   @ApiProperty({
     enum: Role,
     example: Role.USER,
-    description: 'SUPER_ADMIN cannot be assigned via invite',
   })
   @IsEnum(Role)
-  @IsNotIn([Role.SUPER_ADMIN])
   role: Role;
 }

@@ -9,6 +9,7 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { OrganisationsModule } from './organisations/organisations.module';
+import { InvitationsModule } from './invitations/invitations.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { OrganisationsModule } from './organisations/organisations.module';
     UsersModule,
     AuthModule,
     OrganisationsModule,
+    InvitationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

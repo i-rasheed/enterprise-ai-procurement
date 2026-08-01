@@ -115,3 +115,50 @@ export const healthResponseExample = {
   service: 'enterprise-ai-procurement-api',
   version: '1.0.0',
 };
+
+export const inviteUserRequestExample = {
+  email: 'buyer@acme.com',
+  role: Role.USER,
+};
+
+export const invitationResponseExample = {
+  id: 'clxinvitation123',
+  email: 'buyer@acme.com',
+  organisationId: 'clx789ghi012jkl',
+  role: Role.USER,
+  status: 'PENDING',
+  expiresAt: '2026-08-07T10:00:00.000Z',
+  acceptedAt: null,
+  createdAt: '2026-07-31T10:00:00.000Z',
+  updatedAt: '2026-07-31T10:00:00.000Z',
+};
+
+export const createInvitationResponseExample = {
+  invitation: invitationResponseExample,
+  token: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+};
+
+export const invitationListResponseExample = {
+  invitations: [invitationResponseExample],
+};
+
+export const acceptInvitationRequestExample = {
+  token: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  firstName: 'Alex',
+  lastName: 'Buyer',
+  password: 'Password123!',
+};
+
+export const acceptInvitationResponseExample = {
+  invitation: {
+    ...invitationResponseExample,
+    status: 'ACCEPTED',
+    acceptedAt: '2026-07-31T12:00:00.000Z',
+  },
+  userId: 'clxmember123abc',
+  message: 'Invitation accepted successfully',
+};
+
+export const cancelInvitationResponseExample = {
+  message: 'Invitation cancelled successfully',
+};

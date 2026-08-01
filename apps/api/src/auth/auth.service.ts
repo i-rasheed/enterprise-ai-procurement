@@ -12,6 +12,7 @@ import { randomUUID } from 'crypto';
 
 import { toSafeUser } from '../common/utils/user.util';
 import { PrismaService } from '../database/prisma.service';
+import { toOrganisationSlug } from '../organisations/utils/organisation-slug.util';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -30,10 +31,14 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existingUser = await this.usersService.findByEmail(dto.email);
+    const slug = toOrganisationSlug(dto.organisationName);
 
-    if (existingUser) {
-      throw new ConflictException('Email already registered');
+    const existingOrganisation = await this.prisma.organisation.findUnique({
+      where: { slug },
+    });
+
+    if (existingOrganisation) {
+      throw new ConflictException('Organisation slug already exists');
     }
 
     const passwordHash = await argon2.hash(dto.password);
@@ -42,6 +47,7 @@ export class AuthService {
       const organisation = await tx.organisation.create({
         data: {
           name: dto.organisationName,
+          slug,
         },
       });
 
@@ -73,7 +79,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.usersService.findByEmail(dto.email);
+    const user = await this.usersService.findFirstByEmail(dto.email);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
