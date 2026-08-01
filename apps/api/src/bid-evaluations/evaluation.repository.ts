@@ -61,6 +61,21 @@ export type AwardWithRelations = Prisma.AwardGetPayload<{
   include: typeof awardInclude;
 }>;
 
+export const awardWithBidItemsInclude = {
+  awardedBy: awardInclude.awardedBy,
+  procurementRequest: awardInclude.procurementRequest,
+  bid: {
+    include: {
+      items: { orderBy: { createdAt: 'asc' as const } },
+      vendor: true,
+    },
+  },
+} satisfies Prisma.AwardInclude;
+
+export type AwardWithBidItems = Prisma.AwardGetPayload<{
+  include: typeof awardWithBidItemsInclude;
+}>;
+
 @Injectable()
 export class EvaluationRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -164,6 +179,25 @@ export class EvaluationRepository {
         procurementRequest: { organisationId },
       },
       include: awardInclude,
+    });
+  }
+
+  findAwardWithBidItems(id: string, organisationId: string) {
+    return this.prisma.award.findFirst({
+      where: {
+        id,
+        procurementRequest: { organisationId },
+      },
+      include: awardWithBidItemsInclude,
+    });
+  }
+
+  findActivePurchaseOrderByAward(awardId: string) {
+    return this.prisma.purchaseOrder.findFirst({
+      where: {
+        awardId,
+        status: { not: 'CANCELLED' },
+      },
     });
   }
 

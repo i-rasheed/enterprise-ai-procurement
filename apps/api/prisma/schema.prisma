@@ -29,6 +29,7 @@ model User {
   submittedBids         Bid[]
   bidEvaluations        BidEvaluation[]
   awards                Award[]              @relation("AwardedBy")
+  issuedPurchaseOrders  PurchaseOrder[]      @relation("IssuedBy")
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -56,6 +57,7 @@ model Organisation {
   vendors             Vendor[]
   procurementRequests ProcurementRequest[]
   evaluationCriteria  EvaluationCriteria[]
+  purchaseOrders      PurchaseOrder[]
 }
 
 enum ProcurementPriority {
@@ -92,6 +94,7 @@ model ProcurementRequest {
   approvalWorkflow     ApprovalWorkflow?
   rfqs                 RFQ[]
   awards               Award[]
+  purchaseOrders       PurchaseOrder[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 
@@ -327,11 +330,67 @@ model Award {
   awardedBy            User               @relation("AwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
   awardReason          String
   awardedAt            DateTime           @default(now())
+  purchaseOrder        PurchaseOrder?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
   @@index([procurementRequestId])
   @@index([awardedById])
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  ISSUED
+  ACKNOWLEDGED
+  PARTIALLY_DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+model PurchaseOrder {
+  id                   String                @id @default(cuid())
+  poNumber             String                @unique
+  organisationId       String
+  organisation         Organisation          @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  vendorId             String
+  vendor               Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  awardId              String                @unique
+  award                Award                 @relation(fields: [awardId], references: [id], onDelete: Cascade)
+  procurementRequestId String
+  procurementRequest   ProcurementRequest    @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  issuedById           String
+  issuedBy             User                  @relation("IssuedBy", fields: [issuedById], references: [id], onDelete: Cascade)
+  issueDate            DateTime?
+  expectedDeliveryDate DateTime
+  totalAmount          Decimal               @db.Decimal(14, 2) @default(0)
+  currency             String                @default("USD")
+  paymentTerms         String?
+  deliveryAddress      String?
+  notes                String?
+  status               PurchaseOrderStatus   @default(DRAFT)
+  items                PurchaseOrderItem[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@index([organisationId])
+  @@index([vendorId])
+  @@index([procurementRequestId])
+  @@index([issuedById])
+  @@index([status])
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  description     String
+  quantity        Int
+  unitPrice       Decimal       @db.Decimal(14, 2)
+  totalPrice      Decimal       @db.Decimal(14, 2)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([purchaseOrderId])
 }
 
 enum InvitationStatus {
@@ -390,6 +449,7 @@ model Vendor {
   notes                   String?
   rfqVendors              RFQVendor[]
   bids                    Bid[]
+  purchaseOrders          PurchaseOrder[]
   createdAt               DateTime         @default(now())
   updatedAt               DateTime         @updatedAt
 
