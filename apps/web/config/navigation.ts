@@ -1,13 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
-  Building2,
   FileText,
   LayoutDashboard,
   Package,
   Settings,
   ShoppingCart,
   UserCircle,
+  Building2,
   Users,
 } from "lucide-react";
 
@@ -52,16 +52,16 @@ export const mainNavigation: NavItem[] = [
     roles: ["ADMIN", "FINANCE", "PROCUREMENT_MANAGER"],
   },
   {
+    title: "Organization",
+    href: "/dashboard/organization",
+    icon: Users,
+    roles: ["ADMIN", "PROCUREMENT_MANAGER", "FINANCE", "DEPARTMENT_HEAD"],
+  },
+  {
     title: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
     roles: ["ADMIN", "FINANCE", "PROCUREMENT_MANAGER"],
-  },
-  {
-    title: "Team",
-    href: "/dashboard/team",
-    icon: Users,
-    roles: ["ADMIN"],
   },
   {
     title: "Settings",

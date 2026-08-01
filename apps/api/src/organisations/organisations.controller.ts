@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Patch,
   UseGuards,
 } from '@nestjs/common';
@@ -31,6 +32,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrganisationResponseDto } from './dto/organisation-response.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { UpdateOrganisationDto } from './dto/update-organisation.dto';
 import { OrganisationsService } from './organisations.service';
 
@@ -98,6 +100,27 @@ export class OrganisationsController {
       user.organisationId!,
       dto,
     );
+  }
+
+  @Patch('members/:userId/role')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Update organisation member role' })
+  @ApiOkResponse({ description: 'Member role updated' })
+  @ApiForbiddenResponse({ description: 'Admin access required' })
+  async updateMemberRole(
+    @CurrentUser() user: JwtPayload,
+    @Param('userId') userId: string,
+    @Body() dto: UpdateMemberRoleDto,
+  ) {
+    await this.organisationsService.updateMemberRole(
+      user.organisationId!,
+      userId,
+      dto,
+      user.sub,
+    );
+
+    return this.organisationsService.findCurrentTenant(user.organisationId!);
   }
 
   @Delete()

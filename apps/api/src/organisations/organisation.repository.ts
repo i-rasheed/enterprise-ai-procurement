@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Organisation, Prisma } from '@prisma/client';
+import { Organisation, Prisma, Role } from '@prisma/client';
 
 import { PrismaService } from '../database/prisma.service';
 
@@ -63,6 +63,12 @@ export class OrganisationRepository {
   delete(id: string) {
     return this.prisma.organisation.delete({
       where: { id },
+    });
+  }
+
+  countAdmins(organisationId: string) {
+    return this.prisma.user.count({
+      where: { organisationId, role: Role.ADMIN },
     });
   }
 }
