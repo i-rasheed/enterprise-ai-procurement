@@ -342,3 +342,73 @@ export const approvalHistoryResponseExample = {
   procurementRequestId: 'clxprocurement123',
   workflow: approvalWorkflowResponseExample,
 };
+
+export const createRfqRequestExample = {
+  procurementRequestId: 'clxprocurement123',
+  title: 'Office Furniture RFQ Q3',
+  description: 'Request for quotation for ergonomic office chairs and desks.',
+  closingDate: '2026-09-30T23:59:59.000Z',
+};
+
+export const updateRfqRequestExample = {
+  closingDate: '2026-10-15T23:59:59.000Z',
+};
+
+export const inviteVendorRequestExample = {
+  vendorId: 'clxvendor123',
+};
+
+export const publishRfqRequestExample = {
+  publicationNote: 'RFQ ready for vendor responses.',
+};
+
+export const rfqCreatorExample = {
+  id: 'clx123abc456def',
+  email: 'manager@globex.com',
+  firstName: 'John',
+  lastName: 'Smith',
+  role: Role.PROCUREMENT_MANAGER,
+};
+
+export const rfqVendorEntryExample = {
+  id: 'clxrfqvendor123',
+  rfqId: 'clxrfq123',
+  vendor: {
+    id: 'clxvendor123',
+    name: 'Globex Supplies Ltd',
+    email: 'contact@globex.com',
+  },
+  invitedAt: '2026-08-01T10:00:00.000Z',
+  respondedAt: null,
+  status: 'INVITED',
+};
+
+export const rfqResponseExample = {
+  id: 'clxrfq123',
+  procurementRequestId: 'clxprocurement123',
+  rfqNumber: 'RFQ-2026-000001',
+  title: 'Office Furniture RFQ Q3',
+  description: 'Request for quotation for ergonomic office chairs and desks.',
+  closingDate: '2026-09-30T23:59:59.000Z',
+  status: 'DRAFT',
+  createdBy: rfqCreatorExample,
+  vendors: [rfqVendorEntryExample],
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const paginatedRfqResponseExample = {
+  rfqs: [rfqResponseExample],
+  page: 1,
+  limit: 20,
+  total: 1,
+  totalPages: 1,
+};
+
+export const rfqVendorListResponseExample = {
+  vendors: [rfqVendorEntryExample],
+};
+
+export const deleteRfqResponseExample = {
+  message: 'RFQ deleted successfully',
+};
