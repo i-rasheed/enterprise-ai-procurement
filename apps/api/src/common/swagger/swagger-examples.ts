@@ -908,3 +908,111 @@ export const quantityMismatchMatchingResultExample = {
     },
   ],
 };
+
+export const createContractRequestExample = {
+  awardId: 'clxaward123',
+  title: 'Office Furniture Supply Agreement',
+  description: 'Agreement for supply of ergonomic office furniture.',
+  contractType: 'GOODS',
+  startDate: '2026-01-01T00:00:00.000Z',
+  endDate: '2026-12-31T23:59:59.000Z',
+  value: 24000.0,
+  currency: 'USD',
+  renewalType: 'ANNUAL',
+  autoRenew: false,
+  signedByOrganisation: 'Jane Doe, Procurement Director',
+  signedByVendor: 'Alex Supplier, Vendor Representative',
+};
+
+export const updateContractRequestExample = {
+  title: 'Updated Office Furniture Supply Agreement',
+  value: 26000.0,
+  changeSummary: 'Updated contract value and renewal terms.',
+};
+
+export const renewContractRequestExample = {
+  startDate: '2027-01-01T00:00:00.000Z',
+  endDate: '2027-12-31T23:59:59.000Z',
+  value: 26000.0,
+  renewalDate: '2026-12-01T00:00:00.000Z',
+  changeSummary: 'Contract renewed for a second annual term.',
+};
+
+export const terminateContractRequestExample = {
+  reason: 'Contract terminated due to vendor non-compliance.',
+};
+
+export const uploadContractDocumentRequestExample = {
+  fileName: 'master-services-agreement.pdf',
+  fileUrl:
+    'https://storage.example.com/contracts/master-services-agreement.pdf',
+  mimeType: 'application/pdf',
+};
+
+export const contractVersionResponseExample = {
+  id: 'clxversion123',
+  version: 1,
+  changeSummary: 'Initial contract created.',
+  createdBy: {
+    id: 'clx123abc456def',
+    email: 'admin@acme.com',
+    firstName: 'Jane',
+    lastName: 'Doe',
+    role: Role.ADMIN,
+  },
+  createdAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const contractResponseExample = {
+  id: 'clxcontract123',
+  contractNumber: 'CTR-2026-000001',
+  organisationId: 'clxorg123',
+  vendor: {
+    id: 'clxvendor123',
+    name: 'Globex Supplies Ltd',
+    email: 'vendor@globex.com',
+  },
+  procurementRequestId: 'clxprocurement123',
+  purchaseOrderId: null,
+  awardId: 'clxaward123',
+  title: 'Office Furniture Supply Agreement',
+  description: 'Agreement for supply of ergonomic office furniture.',
+  contractType: 'GOODS',
+  startDate: '2026-01-01T00:00:00.000Z',
+  endDate: '2026-12-31T23:59:59.000Z',
+  value: 24000.0,
+  currency: 'USD',
+  renewalType: 'ANNUAL',
+  renewalDate: null,
+  autoRenew: false,
+  status: 'DRAFT',
+  signedByOrganisation: 'Jane Doe, Procurement Director',
+  signedByVendor: 'Alex Supplier, Vendor Representative',
+  createdBy: {
+    id: 'clx123abc456def',
+    email: 'admin@acme.com',
+    firstName: 'Jane',
+    lastName: 'Doe',
+    role: Role.ADMIN,
+  },
+  documents: [],
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const paginatedContractResponseExample = {
+  contracts: [contractResponseExample],
+  page: 1,
+  limit: 20,
+  total: 1,
+  totalPages: 1,
+};
+
+export const contractHistoryResponseExample = {
+  contractId: 'clxcontract123',
+  versions: [contractVersionResponseExample],
+};
+
+export const deleteContractResponseExample = {
+  message: 'Contract deleted successfully',
+};

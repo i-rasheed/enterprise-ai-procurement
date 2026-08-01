@@ -32,6 +32,9 @@ model User {
   issuedPurchaseOrders  PurchaseOrder[]      @relation("IssuedBy")
   goodsReceipts         GoodsReceipt[]       @relation("ReceivedBy")
   matchingResults       MatchingResult[]     @relation("MatchedBy")
+  createdContracts      Contract[]           @relation("ContractCreatedBy")
+  contractVersions      ContractVersion[]    @relation("ContractVersionCreatedBy")
+  uploadedContractDocs  ContractDocument[]   @relation("ContractDocumentUploadedBy")
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -62,6 +65,7 @@ model Organisation {
   purchaseOrders      PurchaseOrder[]
   goodsReceipts       GoodsReceipt[]
   invoices            Invoice[]
+  contracts           Contract[]
 }
 
 enum ProcurementPriority {
@@ -99,6 +103,7 @@ model ProcurementRequest {
   rfqs                 RFQ[]
   awards               Award[]
   purchaseOrders       PurchaseOrder[]
+  contracts            Contract[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 
@@ -335,6 +340,7 @@ model Award {
   awardReason          String
   awardedAt            DateTime           @default(now())
   purchaseOrder        PurchaseOrder?
+  contracts            Contract[]
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
@@ -375,6 +381,7 @@ model PurchaseOrder {
   items                PurchaseOrderItem[]
   goodsReceipts        GoodsReceipt[]
   invoices             Invoice[]
+  contracts              Contract[]
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
@@ -537,6 +544,95 @@ model MatchingResult {
   @@index([matchStatus])
 }
 
+enum ContractStatus {
+  DRAFT
+  UNDER_REVIEW
+  ACTIVE
+  EXPIRED
+  TERMINATED
+  RENEWED
+}
+
+enum ContractType {
+  GOODS
+  SERVICES
+  CONSULTING
+  SOFTWARE
+  FRAMEWORK
+}
+
+model Contract {
+  id                    String         @id @default(cuid())
+  contractNumber        String         @unique
+  organisationId        String
+  organisation          Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  vendorId              String
+  vendor                Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  procurementRequestId  String
+  procurementRequest    ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  purchaseOrderId       String?
+  purchaseOrder         PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  awardId               String?
+  award                 Award?         @relation(fields: [awardId], references: [id], onDelete: SetNull)
+  title                 String
+  description           String
+  contractType          ContractType
+  startDate             DateTime
+  endDate               DateTime
+  value                 Decimal        @db.Decimal(14, 2)
+  currency              String         @default("USD")
+  renewalType           String?
+  renewalDate           DateTime?
+  autoRenew             Boolean        @default(false)
+  status                ContractStatus @default(DRAFT)
+  signedByOrganisation  String?
+  signedByVendor        String?
+  createdById           String
+  createdBy             User           @relation("ContractCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  versions              ContractVersion[]
+  documents             ContractDocument[]
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([organisationId])
+  @@index([vendorId])
+  @@index([procurementRequestId])
+  @@index([purchaseOrderId])
+  @@index([awardId])
+  @@index([status])
+  @@index([contractType])
+}
+
+model ContractVersion {
+  id            String   @id @default(cuid())
+  contractId    String
+  contract      Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  version       Int
+  changeSummary String
+  createdById   String
+  createdBy     User     @relation("ContractVersionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([contractId, version])
+  @@index([contractId])
+  @@index([createdById])
+}
+
+model ContractDocument {
+  id          String   @id @default(cuid())
+  contractId  String
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  mimeType    String
+  uploadedById String
+  uploadedBy  User     @relation("ContractDocumentUploadedBy", fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedAt  DateTime @default(now())
+
+  @@index([contractId])
+  @@index([uploadedById])
+}
+
 enum InvitationStatus {
   PENDING
   ACCEPTED
@@ -595,6 +691,7 @@ model Vendor {
   bids                    Bid[]
   purchaseOrders          PurchaseOrder[]
   invoices                Invoice[]
+  contracts               Contract[]
   createdAt               DateTime         @default(now())
   updatedAt               DateTime         @updatedAt
 
