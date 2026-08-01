@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   CheckCircle2,
+  FileSearch,
   FileText,
   LayoutDashboard,
   Package,
@@ -39,6 +40,12 @@ export const mainNavigation: NavItem[] = [
     href: "/dashboard/approvals",
     icon: CheckCircle2,
     roles: ["ADMIN", "DEPARTMENT_HEAD", "PROCUREMENT_MANAGER", "FINANCE"],
+  },
+  {
+    title: "RFQs",
+    href: "/dashboard/rfqs",
+    icon: FileSearch,
+    roles: ["ADMIN", "PROCUREMENT_MANAGER", "DEPARTMENT_HEAD", "FINANCE"],
   },
   {
     title: "Vendors",
