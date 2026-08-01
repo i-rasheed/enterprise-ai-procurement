@@ -44,6 +44,7 @@ export const envSchema = z.object({
     .int()
     .positive()
     .default(15),
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
     .default('info'),

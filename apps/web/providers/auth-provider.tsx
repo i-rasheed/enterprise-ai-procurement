@@ -5,12 +5,14 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
 } from "react";
 
-import { useAuthProfile } from "@/features/auth/hooks/use-auth";
-import type { JwtPayload, OrganisationSummary, SafeUser } from "@/lib/api/types";
+import {
+  useAuthProfile,
+  useAuthSessionSync,
+} from "@/features/auth/hooks/use-auth";
+import type { OrganisationSummary, SafeUser, UserProfile } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/auth-store";
 
 type AuthContextValue = {
@@ -19,7 +21,7 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   isHydrated: boolean;
   isLoading: boolean;
-  profile: JwtPayload | undefined;
+  profile: UserProfile | undefined;
   requireAuth: () => void;
 };
 
@@ -27,6 +29,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  useAuthSessionSync();
+
   const user = useAuthStore((state) => state.user);
   const organisation = useAuthStore((state) => state.organisation);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -41,12 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.replace("/login");
     }
   }, [isAuthenticated, isHydrated, router]);
-
-  useEffect(() => {
-    if (isHydrated && !isAuthenticated) {
-      return;
-    }
-  }, [isAuthenticated, isHydrated]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

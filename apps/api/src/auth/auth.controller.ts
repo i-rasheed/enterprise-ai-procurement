@@ -42,6 +42,13 @@ import {
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import {
+  MessageAuthResponseDto,
+  VerifyEmailResponseDto,
+} from './dto/auth-message-response.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -112,6 +119,50 @@ export class AuthController {
   })
   refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
     return this.authService.refresh(dto, this.extractContext(req));
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request a password reset email' })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiOkResponse({ type: MessageAuthResponseDto })
+  forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
+    return this.authService.forgotPassword(dto.email, this.extractContext(req));
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password using email token' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiOkResponse({ type: MessageAuthResponseDto })
+  resetPassword(@Body() dto: ResetPasswordDto, @Req() req: Request) {
+    return this.authService.resetPassword(
+      dto.token,
+      dto.password,
+      this.extractContext(req),
+    );
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify email address using token' })
+  @ApiBody({ type: VerifyEmailDto })
+  @ApiOkResponse({ type: VerifyEmailResponseDto })
+  verifyEmail(@Body() dto: VerifyEmailDto, @Req() req: Request) {
+    return this.authService.verifyEmail(dto.token, this.extractContext(req));
+  }
+
+  @Post('resend-verification')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Resend email verification link' })
+  @ApiOkResponse({ type: VerifyEmailResponseDto })
+  resendVerification(@CurrentUser() user: JwtPayload, @Req() req: Request) {
+    return this.authService.resendVerificationEmail(
+      user.sub,
+      this.extractContext(req),
+    );
   }
 
   @Post('logout')

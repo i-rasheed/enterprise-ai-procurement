@@ -3,10 +3,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { JwtPayload, OrganisationSummary, SafeUser } from "@/lib/api/types";
+import {
+  clearSessionCookie,
+  getRememberMePreference,
+  setSessionCookie,
+} from "@/lib/auth/session";
+import type { OrganisationSummary, SafeUser, UserProfile } from "@/lib/api/types";
 import {
   clearStoredTokens,
   getStoredAccessToken,
+  getStoredRefreshToken,
   setStoredTokens,
   subscribeToTokenChanges,
 } from "@/lib/api/client";
@@ -16,6 +22,7 @@ export type AuthState = {
   organisation: OrganisationSummary | null;
   accessToken: string | null;
   refreshToken: string | null;
+  rememberMe: boolean;
   isAuthenticated: boolean;
   isHydrated: boolean;
   setSession: (payload: {
@@ -23,8 +30,9 @@ export type AuthState = {
     organisation?: OrganisationSummary | null;
     accessToken: string;
     refreshToken: string;
+    rememberMe?: boolean;
   }) => void;
-  setProfile: (profile: JwtPayload) => void;
+  setUserProfile: (profile: UserProfile) => void;
   clearSession: () => void;
   setHydrated: (value: boolean) => void;
 };
@@ -36,47 +44,55 @@ export const useAuthStore = create<AuthState>()(
       organisation: null,
       accessToken: null,
       refreshToken: null,
+      rememberMe: true,
       isAuthenticated: false,
       isHydrated: false,
 
-      setSession: ({ user, organisation, accessToken, refreshToken }) => {
-        setStoredTokens(accessToken, refreshToken);
+      setSession: ({
+        user,
+        organisation,
+        accessToken,
+        refreshToken,
+        rememberMe = getRememberMePreference(),
+      }) => {
+        setStoredTokens(accessToken, refreshToken, rememberMe);
+        setSessionCookie();
         set({
           user,
           organisation: organisation ?? null,
           accessToken,
           refreshToken,
+          rememberMe,
           isAuthenticated: true,
         });
       },
 
-      setProfile: (profile) => {
+      setUserProfile: (profile) => {
         set((state) => ({
-          user: state.user
+          user: {
+            id: profile.id,
+            email: profile.email,
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            role: profile.role,
+            isVerified: profile.isVerified,
+            organisationId: profile.organisationId,
+            createdAt: profile.createdAt,
+            updatedAt: profile.updatedAt,
+          },
+          organisation: profile.organisationName
             ? {
-                ...state.user,
-                id: profile.sub,
-                email: profile.email,
-                role: profile.role,
-                organisationId: profile.organisationId ?? null,
+                id: profile.organisationId,
+                name: profile.organisationName,
               }
-            : {
-                id: profile.sub,
-                email: profile.email,
-                firstName: "",
-                lastName: "",
-                role: profile.role,
-                isVerified: true,
-                organisationId: profile.organisationId ?? null,
-                createdAt: "",
-                updatedAt: "",
-              },
+            : state.organisation,
           isAuthenticated: true,
         }));
       },
 
       clearSession: () => {
         clearStoredTokens();
+        clearSessionCookie();
         set({
           user: null,
           organisation: null,
@@ -95,13 +111,19 @@ export const useAuthStore = create<AuthState>()(
         organisation: state.organisation,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        rememberMe: state.rememberMe,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
         const token = getStoredAccessToken();
+        const refreshToken = getStoredRefreshToken();
         if (token && state) {
           state.accessToken = token;
+          state.refreshToken = refreshToken;
           state.isAuthenticated = Boolean(state.user);
+          if (state.isAuthenticated) {
+            setSessionCookie();
+          }
         }
         state?.setHydrated(true);
       },

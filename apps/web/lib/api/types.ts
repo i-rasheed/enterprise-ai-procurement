@@ -66,6 +66,31 @@ export type JwtPayload = {
   organisationId?: string | null;
 };
 
+export type UserProfile = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: Role;
+  isVerified: boolean;
+  organisationId: string;
+  organisationName?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MessageResponse = {
+  message: string;
+};
+
+export type VerifyEmailResponse = MessageResponse & {
+  isVerified: boolean;
+};
+
+export type RevokeSessionsResponse = MessageResponse & {
+  revokedCount: number;
+};
+
 export type PaginatedMeta = {
   total: number;
   page: number;

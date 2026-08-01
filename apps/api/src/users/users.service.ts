@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma, Role, User } from '@prisma/client';
 
+import { toSafeUser } from '../common/utils/user.util';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -9,6 +10,35 @@ export class UsersService {
 
   async findById(id: string) {
     return this.userRepository.findById(id);
+  }
+
+  async getProfile(id: string) {
+    const user = await this.userRepository.findByIdWithOrganisation(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.toProfileResponse(user);
+  }
+
+  toProfileResponse(
+    user: User & { organisation?: { name: string } | null },
+  ) {
+    const safe = toSafeUser(user);
+
+    return {
+      id: safe.id,
+      email: safe.email,
+      firstName: safe.firstName,
+      lastName: safe.lastName,
+      role: safe.role,
+      isVerified: safe.isVerified,
+      organisationId: safe.organisationId,
+      organisationName: user.organisation?.name,
+      createdAt: safe.createdAt,
+      updatedAt: safe.updatedAt,
+    };
   }
 
   findFirstByEmail(email: string) {

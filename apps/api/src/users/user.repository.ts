@@ -30,6 +30,13 @@ export class UserRepository {
     });
   }
 
+  findByIdWithOrganisation(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { organisation: { select: { name: true } } },
+    });
+  }
+
   findFirstByOrganisationAndRole(organisationId: string, role: Role) {
     return this.prisma.user.findFirst({
       where: { organisationId, role },
