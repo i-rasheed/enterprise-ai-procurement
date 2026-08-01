@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   FileSearch,
+  FileSignature,
   FileText,
   Gavel,
   LayoutDashboard,
@@ -78,6 +79,12 @@ export const mainNavigation: NavItem[] = [
     href: "/dashboard/invoices",
     icon: FileText,
     roles: ["ADMIN", "FINANCE", "PROCUREMENT_MANAGER"],
+  },
+  {
+    title: "Contracts",
+    href: "/dashboard/contracts",
+    icon: FileSignature,
+    roles: ["ADMIN", "FINANCE", "PROCUREMENT_MANAGER", "USER"],
   },
   {
     title: "Organization",
