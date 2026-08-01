@@ -12,6 +12,7 @@ export const bidInclude = {
       title: true,
       closingDate: true,
       status: true,
+      procurementRequestId: true,
       procurementRequest: {
         select: { organisationId: true },
       },
