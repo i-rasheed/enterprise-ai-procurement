@@ -57,6 +57,12 @@ import { VectorSearchService } from './vector-search/vector-search.service';
     InvoiceAnomalyService,
     ChatService,
   ],
-  exports: [AiService, EmbeddingService, VectorSearchService, AiRepository],
+  exports: [
+    AiService,
+    AiDataContextService,
+    EmbeddingService,
+    VectorSearchService,
+    AiRepository,
+  ],
 })
 export class AiModule {}
