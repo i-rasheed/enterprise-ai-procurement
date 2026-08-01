@@ -1,15 +1,19 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { User, Role } from '@prisma/client';
+import { AuditAction, User, Role } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { type StringValue } from 'ms';
 import ms from 'ms';
 import { randomUUID } from 'crypto';
 
+import { AuditService } from '../audit/audit.service';
+import { assertPasswordPolicy } from '../common/pipes/sanitize-input.pipe';
 import { toSafeUser } from '../common/utils/user.util';
 import { PrismaService } from '../database/prisma.service';
 import { toOrganisationSlug } from '../organisations/utils/organisation-slug.util';
@@ -21,6 +25,12 @@ import { RefreshTokenRepository } from './refresh-token.repository';
 import { RefreshTokenPayload } from './types/refresh-token-payload.interface';
 import { createTokenId, hashToken } from './utils/token.util';
 
+export type AuthContext = {
+  ipAddress?: string;
+  userAgent?: string;
+  correlationId?: string;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -28,9 +38,13 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly auditService: AuditService,
+    private readonly configService: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, context: AuthContext = {}) {
+    assertPasswordPolicy(dto.password);
+
     const slug = toOrganisationSlug(dto.organisationName);
 
     const existingOrganisation = await this.prisma.organisation.findUnique({
@@ -62,10 +76,22 @@ export class AuthService {
         },
       });
 
+      await tx.notificationPreference.create({
+        data: { userId: user.id },
+      });
+
       return { organisation, user };
     });
 
     const tokens = await this.createTokenPair(result.user);
+
+    await this.auditService.logAuth(AuditAction.AUTH_REGISTER, {
+      userId: result.user.id,
+      organisationId: result.organisation.id,
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      correlationId: context.correlationId,
+    });
 
     return {
       user: tokens.user,
@@ -78,11 +104,18 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, context: AuthContext = {}) {
     const user = await this.usersService.findFirstByEmail(dto.email);
 
     if (!user) {
+      await this.handleFailedLogin(dto.email, context);
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      throw new ForbiddenException(
+        'Account is temporarily locked due to failed login attempts.',
+      );
     }
 
     const isPasswordValid = await argon2.verify(
@@ -91,8 +124,14 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
+      await this.handleFailedLogin(dto.email, context, user);
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
 
     const tokens = await this.createTokenPair(user);
     const organisation = user.organisationId
@@ -102,15 +141,24 @@ export class AuthService {
         })
       : null;
 
+    await this.auditService.logAuth(AuditAction.AUTH_LOGIN, {
+      userId: user.id,
+      organisationId: user.organisationId,
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      correlationId: context.correlationId,
+    });
+
     return {
       user: tokens.user,
       organisation,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
+      mfaRequired: user.mfaEnabled,
     };
   }
 
-  async refresh(dto: RefreshTokenDto) {
+  async refresh(dto: RefreshTokenDto, context: AuthContext = {}) {
     const payload = await this.verifyRefreshToken(dto.refreshToken);
     const tokenHash = hashToken(payload.jti);
     const stored = await this.refreshTokenRepository.findByHash(tokenHash);
@@ -136,10 +184,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
+    await this.auditService.logAuth(AuditAction.AUTH_TOKEN_REFRESH, {
+      userId: user.id,
+      organisationId: user.organisationId,
+      ipAddress: context.ipAddress,
+      correlationId: context.correlationId,
+    });
+
     return this.createTokenPair(user, payload.familyId);
   }
 
-  async logout(dto: RefreshTokenDto) {
+  async logout(dto: RefreshTokenDto, context: AuthContext = {}) {
     const payload = await this.verifyRefreshToken(dto.refreshToken);
     const tokenHash = hashToken(payload.jti);
     const stored = await this.refreshTokenRepository.findByHash(tokenHash);
@@ -148,9 +203,103 @@ export class AuthService {
       await this.refreshTokenRepository.revokeById(stored.id);
     }
 
+    await this.auditService.logAuth(AuditAction.AUTH_LOGOUT, {
+      userId: payload.sub,
+      ipAddress: context.ipAddress,
+      correlationId: context.correlationId,
+    });
+
+    return { message: 'Logged out successfully' };
+  }
+
+  async revokeAllSessions(userId: string, context: AuthContext = {}) {
+    const count = await this.refreshTokenRepository.revokeAllForUser(userId);
+
+    await this.auditService.logAuth(AuditAction.AUTH_TOKEN_REVOKE, {
+      userId,
+      metadata: { revokedCount: count },
+      ipAddress: context.ipAddress,
+      correlationId: context.correlationId,
+    });
+
+    return { message: 'All sessions revoked', revokedCount: count };
+  }
+
+  getMfaStatus(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { mfaEnabled: true },
+    });
+  }
+
+  async enableMfaFoundation(userId: string) {
+    const secret = randomUUID();
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { mfaSecret: secret, mfaEnabled: false },
+    });
     return {
-      message: 'Logged out successfully',
+      message: 'MFA secret generated. Complete verification to enable MFA.',
+      mfaSecret: secret,
+      qrCodeUrl: `otpauth://totp/EnterpriseProcurement:${userId}?secret=${secret}&issuer=EnterpriseProcurement`,
     };
+  }
+
+  private async handleFailedLogin(
+    email: string,
+    context: AuthContext,
+    user?: User,
+  ): Promise<void> {
+    await this.auditService.recordLoginAttempt(
+      email,
+      false,
+      context.ipAddress,
+      context.userAgent,
+    );
+
+    await this.auditService.logAuth(AuditAction.AUTH_LOGIN_FAILED, {
+      metadata: { email },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      correlationId: context.correlationId,
+    });
+
+    if (!user) return;
+
+    const threshold = this.configService.get<number>(
+      'ACCOUNT_LOCKOUT_THRESHOLD',
+      5,
+    );
+    const lockMinutes = this.configService.get<number>(
+      'ACCOUNT_LOCKOUT_DURATION_MINUTES',
+      15,
+    );
+
+    const attempts = user.failedLoginAttempts + 1;
+
+    if (attempts >= threshold) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: attempts,
+          lockedUntil: new Date(Date.now() + lockMinutes * 60 * 1000),
+        },
+      });
+
+      await this.auditService.logAuth(AuditAction.AUTH_ACCOUNT_LOCKED, {
+        userId: user.id,
+        organisationId: user.organisationId,
+        metadata: { attempts },
+        ipAddress: context.ipAddress,
+        correlationId: context.correlationId,
+      });
+      return;
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: attempts },
+    });
   }
 
   private async verifyRefreshToken(
@@ -159,9 +308,7 @@ export class AuthService {
     try {
       const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
         token,
-        {
-          secret: process.env.JWT_REFRESH_SECRET!,
-        },
+        { secret: process.env.JWT_REFRESH_SECRET! },
       );
 
       if (!payload.jti || !payload.familyId || !payload.sub) {
@@ -188,11 +335,7 @@ export class AuthService {
     const accessToken = await this.jwtService.signAsync(payload);
 
     const refreshToken = await this.jwtService.signAsync(
-      {
-        ...payload,
-        jti,
-        familyId,
-      },
+      { ...payload, jti, familyId },
       {
         secret: process.env.JWT_REFRESH_SECRET!,
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN as StringValue,

@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
@@ -23,18 +22,7 @@ import { ContractSummaryService } from './summaries/contract-summary.service';
 import { VectorSearchService } from './vector-search/vector-search.service';
 
 @Module({
-  imports: [
-    ConfigModule.forFeature(aiConfig),
-    ThrottlerModule.forRoot([
-      {
-        name: 'default',
-        ttl: 60_000,
-        limit: 30,
-      },
-    ]),
-    DatabaseModule,
-    AuthModule,
-  ],
+  imports: [ConfigModule.forFeature(aiConfig), DatabaseModule, AuthModule],
   controllers: [AiController],
   providers: [
     AiRepository,
