@@ -22,7 +22,8 @@ model User {
   organisationId String
   organisation   Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
 
-  refreshTokens  RefreshToken[]
+  refreshTokens         RefreshToken[]
+  procurementRequests   ProcurementRequest[]
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -43,9 +44,65 @@ model Organisation {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  users       User[]
-  invitations Invitation[]
-  vendors     Vendor[]
+  users               User[]
+  invitations         Invitation[]
+  vendors             Vendor[]
+  procurementRequests ProcurementRequest[]
+}
+
+enum ProcurementPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ProcurementStatus {
+  DRAFT
+  SUBMITTED
+  CANCELLED
+  REJECTED
+  APPROVED
+}
+
+model ProcurementRequest {
+  id                   String              @id @default(cuid())
+  organisationId       String
+  organisation         Organisation        @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  requesterId          String
+  requester            User                @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  title                String
+  description          String
+  justification        String
+  department           String
+  estimatedBudget      Decimal             @db.Decimal(14, 2)
+  currency             String              @default("USD")
+  priority             ProcurementPriority @default(MEDIUM)
+  status               ProcurementStatus   @default(DRAFT)
+  requiredDeliveryDate DateTime
+  items                ProcurementItem[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@index([organisationId])
+  @@index([requesterId])
+  @@index([status])
+  @@index([priority])
+  @@index([department])
+}
+
+model ProcurementItem {
+  id                   String             @id @default(cuid())
+  procurementRequestId String
+  procurementRequest   ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  description          String
+  quantity             Int
+  unitPrice            Decimal            @db.Decimal(14, 2)
+  totalPrice           Decimal            @db.Decimal(14, 2)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([procurementRequestId])
 }
 
 enum InvitationStatus {
