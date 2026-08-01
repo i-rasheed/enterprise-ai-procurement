@@ -764,3 +764,147 @@ export const completeGoodsReceiptResponseExample = {
     },
   ],
 };
+
+export const createInvoiceItemRequestExample = {
+  purchaseOrderItemId: 'clxpoitem123',
+  description: 'Ergonomic office chair model X200',
+  quantity: 10,
+  unitPrice: 240.0,
+};
+
+export const createInvoiceRequestExample = {
+  vendorId: 'clxvendor123',
+  purchaseOrderId: 'clxpo123',
+  goodsReceiptId: 'clxgrn123',
+  invoiceDate: '2026-10-01T00:00:00.000Z',
+  dueDate: '2026-10-31T00:00:00.000Z',
+  subtotal: 2400.0,
+  taxAmount: 240.0,
+  currency: 'USD',
+  paymentTerms: 'Net 30',
+  notes: 'Invoice for delivered office chairs.',
+  items: [createInvoiceItemRequestExample],
+};
+
+export const updateInvoiceRequestExample = {
+  dueDate: '2026-11-05T00:00:00.000Z',
+  notes: 'Updated invoice notes.',
+};
+
+export const submitInvoiceRequestExample = {
+  notes: 'Submitted for three-way matching.',
+};
+
+export const approveInvoiceRequestExample = {
+  notes: 'Three-way match verified. Approved for payment.',
+};
+
+export const rejectInvoiceRequestExample = {
+  reason: 'Invoice total does not match purchase order amount.',
+};
+
+export const markPaidRequestExample = {
+  paidDate: '2026-11-01T12:00:00.000Z',
+  paymentReference: 'PAY-2026-000001',
+};
+
+export const invoiceItemResponseExample = {
+  id: 'clxinvitem123',
+  purchaseOrderItemId: 'clxpoitem123',
+  description: 'Ergonomic office chair model X200',
+  quantity: 10,
+  unitPrice: 240.0,
+  totalPrice: 2400.0,
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const matchingResultResponseExample = {
+  id: 'clxmatch123',
+  invoiceId: 'clxinv123',
+  purchaseOrderId: 'clxpo123',
+  goodsReceiptId: 'clxgrn123',
+  matchStatus: 'MATCHED',
+  matchedBy: {
+    id: 'clx123abc456def',
+    email: 'finance@acme.com',
+    firstName: 'Finance',
+    lastName: 'Manager',
+    role: Role.FINANCE,
+  },
+  matchedAt: '2026-08-01T12:00:00.000Z',
+  discrepancies: null,
+  createdAt: '2026-08-01T12:00:00.000Z',
+  updatedAt: '2026-08-01T12:00:00.000Z',
+};
+
+export const invoiceResponseExample = {
+  id: 'clxinv123',
+  invoiceNumber: 'INV-2026-000001',
+  vendor: {
+    id: 'clxvendor123',
+    name: 'Globex Supplies Ltd',
+    email: 'vendor@globex.com',
+  },
+  purchaseOrderId: 'clxpo123',
+  goodsReceiptId: 'clxgrn123',
+  organisationId: 'clxorg123',
+  invoiceDate: '2026-10-01T00:00:00.000Z',
+  dueDate: '2026-10-31T00:00:00.000Z',
+  subtotal: 2400.0,
+  taxAmount: 240.0,
+  totalAmount: 2640.0,
+  currency: 'USD',
+  paymentTerms: 'Net 30',
+  status: 'DRAFT',
+  notes: 'Invoice for delivered office chairs.',
+  items: [invoiceItemResponseExample],
+  matchingResult: null,
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const paginatedInvoiceResponseExample = {
+  invoices: [invoiceResponseExample],
+  page: 1,
+  limit: 20,
+  total: 1,
+  totalPages: 1,
+};
+
+export const matchInvoiceResponseExample = {
+  invoice: { ...invoiceResponseExample, status: 'MATCHED' },
+  matchingResult: matchingResultResponseExample,
+};
+
+export const deleteInvoiceResponseExample = {
+  message: 'Invoice deleted successfully',
+};
+
+export const priceMismatchMatchingResultExample = {
+  ...matchingResultResponseExample,
+  matchStatus: 'PRICE_MISMATCH',
+  discrepancies: [
+    {
+      field: 'unitPrice',
+      purchaseOrderItemId: 'clxpoitem123',
+      expected: 240.0,
+      actual: 250.0,
+      message: 'Unit price does not match purchase order',
+    },
+  ],
+};
+
+export const quantityMismatchMatchingResultExample = {
+  ...matchingResultResponseExample,
+  matchStatus: 'QUANTITY_MISMATCH',
+  discrepancies: [
+    {
+      field: 'quantity',
+      purchaseOrderItemId: 'clxpoitem123',
+      expected: 10,
+      actual: 8,
+      message: 'Invoice quantity does not match goods receipt',
+    },
+  ],
+};
