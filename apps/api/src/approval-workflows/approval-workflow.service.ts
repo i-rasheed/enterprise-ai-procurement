@@ -12,6 +12,7 @@ import {
   WorkflowStatus,
 } from '@prisma/client';
 
+import { AuditService } from '../audit/audit.service';
 import { ProcurementRepository } from '../procurement/procurement.repository';
 import { UserRepository } from '../users/user.repository';
 import {
@@ -31,6 +32,7 @@ export class ApprovalWorkflowService {
     private readonly approvalRepository: ApprovalRepository,
     private readonly procurementRepository: ProcurementRepository,
     private readonly userRepository: UserRepository,
+    private readonly auditService: AuditService,
   ) {}
 
   async startWorkflow(organisationId: string, requestId: string) {
@@ -106,6 +108,18 @@ export class ApprovalWorkflowService {
       dto.comments,
     );
 
+    await this.auditService.logBusiness('APPROVAL_APPROVED', {
+      organisationId,
+      userId,
+      entityType: 'ApprovalWorkflow',
+      entityId: workflowId,
+      metadata: {
+        procurementRequestId: workflow.procurementRequestId,
+        level: currentStep.level,
+        comments: dto.comments,
+      },
+    });
+
     return this.mapWorkflow(updated);
   }
 
@@ -129,6 +143,18 @@ export class ApprovalWorkflowService {
       currentStep.id,
       dto.comments,
     );
+
+    await this.auditService.logBusiness('APPROVAL_REJECTED', {
+      organisationId,
+      userId,
+      entityType: 'ApprovalWorkflow',
+      entityId: workflowId,
+      metadata: {
+        procurementRequestId: workflow.procurementRequestId,
+        level: currentStep.level,
+        comments: dto.comments,
+      },
+    });
 
     return this.mapWorkflow(updated);
   }
@@ -157,7 +183,23 @@ export class ApprovalWorkflowService {
     );
 
     return {
-      pendingApprovals: actionable.map((step) => this.mapStep(step)),
+      pendingApprovals: actionable.map((step) => ({
+        ...this.mapStep(step),
+        procurementRequest: step.workflow.procurementRequest
+          ? {
+              id: step.workflow.procurementRequest.id,
+              title: step.workflow.procurementRequest.title,
+              department: step.workflow.procurementRequest.department,
+              estimatedBudget: Number(
+                step.workflow.procurementRequest.estimatedBudget,
+              ),
+              currency: step.workflow.procurementRequest.currency,
+              priority: step.workflow.procurementRequest.priority,
+              status: step.workflow.procurementRequest.status,
+              requester: step.workflow.procurementRequest.requester,
+            }
+          : null,
+      })),
     };
   }
 

@@ -55,6 +55,36 @@ export class AuditService {
     return this.log({ ...context, action });
   }
 
+  async listForOrganisation(
+    organisationId: string,
+    page: number,
+    limit: number,
+  ) {
+    const [logs, total] =
+      await this.auditRepository.findByOrganisationPaginated(
+        organisationId,
+        page,
+        limit,
+      );
+
+    return {
+      logs: logs.map((log) => ({
+        id: log.id,
+        organisationId: log.organisationId,
+        userId: log.userId,
+        action: log.action,
+        entityType: log.entityType,
+        entityId: log.entityId,
+        metadata: log.metadata as Record<string, unknown> | null,
+        createdAt: log.createdAt.toISOString(),
+      })),
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
   recordLoginAttempt(
     email: string,
     success: boolean,
