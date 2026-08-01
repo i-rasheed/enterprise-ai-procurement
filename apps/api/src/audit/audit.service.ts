@@ -41,6 +41,10 @@ export class AuditService {
       | 'AUTH_TOKEN_REVOKE'
       | 'AUTH_LOGIN_FAILED'
       | 'AUTH_ACCOUNT_LOCKED'
+      | 'AUTH_PASSWORD_RESET_REQUEST'
+      | 'AUTH_PASSWORD_RESET'
+      | 'AUTH_EMAIL_VERIFICATION_SENT'
+      | 'AUTH_EMAIL_VERIFIED'
     >,
     context: Omit<AuditLogInput, 'action'>,
   ) {

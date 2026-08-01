@@ -14,10 +14,15 @@ export type {
   AuthTokens,
   JwtPayload,
   LoginResponse,
+  MessageResponse,
   OrganisationSummary,
   PaginatedMeta,
   PaginatedResponse,
   RegisterResponse,
+  RevokeSessionsResponse,
   Role,
   SafeUser,
+  UserProfile,
+  VerifyEmailResponse,
 } from "./types";
+export { authEndpoints, getSwaggerDocsUrl } from "./endpoints";

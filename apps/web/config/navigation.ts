@@ -7,6 +7,7 @@ import {
   Package,
   Settings,
   ShoppingCart,
+  UserCircle,
   Users,
 } from "lucide-react";
 
@@ -66,6 +67,11 @@ export const mainNavigation: NavItem[] = [
     title: "Settings",
     href: "/dashboard/settings",
     icon: Settings,
+  },
+  {
+    title: "Profile",
+    href: "/dashboard/profile",
+    icon: UserCircle,
   },
 ];
 

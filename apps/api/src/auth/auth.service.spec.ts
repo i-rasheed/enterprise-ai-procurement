@@ -6,7 +6,9 @@ import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../database/prisma.service';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
+import { AuthTokenRepository } from './auth-token.repository';
 import { RefreshTokenRepository } from './refresh-token.repository';
+import { JobService } from '../jobs/job.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -19,6 +21,8 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: { signAsync: jest.fn() } },
         { provide: PrismaService, useValue: {} },
         { provide: RefreshTokenRepository, useValue: {} },
+        { provide: AuthTokenRepository, useValue: {} },
+        { provide: JobService, useValue: { enqueueEmail: jest.fn() } },
         {
           provide: AuditService,
           useValue: { logAuth: jest.fn(), recordLoginAttempt: jest.fn() },

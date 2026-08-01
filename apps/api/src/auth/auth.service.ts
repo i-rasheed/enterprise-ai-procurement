@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -6,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { AuditAction, User, Role } from '@prisma/client';
+import { AuditAction, AuthTokenType, User, Role } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { type StringValue } from 'ms';
 import ms from 'ms';
@@ -17,7 +18,9 @@ import { assertPasswordPolicy } from '../common/pipes/sanitize-input.pipe';
 import { toSafeUser } from '../common/utils/user.util';
 import { PrismaService } from '../database/prisma.service';
 import { toOrganisationSlug } from '../organisations/utils/organisation-slug.util';
+import { JobService } from '../jobs/job.service';
 import { UsersService } from '../users/users.service';
+import { AuthTokenRepository } from './auth-token.repository';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -38,8 +41,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly authTokenRepository: AuthTokenRepository,
     private readonly auditService: AuditService,
     private readonly configService: ConfigService,
+    private readonly jobService: JobService,
   ) {}
 
   async register(dto: RegisterDto, context: AuthContext = {}) {
@@ -92,6 +97,8 @@ export class AuthService {
       userAgent: context.userAgent,
       correlationId: context.correlationId,
     });
+
+    await this.sendVerificationEmail(result.user);
 
     return {
       user: tokens.user,
@@ -225,6 +232,142 @@ export class AuthService {
     return { message: 'All sessions revoked', revokedCount: count };
   }
 
+  async forgotPassword(email: string, context: AuthContext = {}) {
+    const user = await this.usersService.findFirstByEmail(email);
+
+    if (user) {
+      await this.authTokenRepository.invalidateUserTokens(
+        user.id,
+        AuthTokenType.PASSWORD_RESET,
+      );
+
+      const rawToken = createTokenId();
+      const expiresAt = new Date(Date.now() + ms('1h'));
+
+      await this.authTokenRepository.create({
+        userId: user.id,
+        tokenHash: hashToken(rawToken),
+        type: AuthTokenType.PASSWORD_RESET,
+        expiresAt,
+      });
+
+      const frontendUrl = this.configService.get<string>(
+        'FRONTEND_URL',
+        'http://localhost:3000',
+      );
+      const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+      await this.jobService.enqueueEmail({
+        to: user.email,
+        subject: 'Reset your ProcureAI password',
+        html: `<p>Use this link to reset your password (expires in 1 hour):</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+      });
+
+      await this.auditService.logAuth(AuditAction.AUTH_PASSWORD_RESET_REQUEST, {
+        userId: user.id,
+        organisationId: user.organisationId,
+        ipAddress: context.ipAddress,
+        correlationId: context.correlationId,
+      });
+    }
+
+    return {
+      message:
+        'If an account exists for this email, a password reset link has been sent.',
+    };
+  }
+
+  async resetPassword(token: string, password: string, context: AuthContext = {}) {
+    assertPasswordPolicy(password);
+
+    const stored = await this.authTokenRepository.findValidByHash(
+      hashToken(token),
+      AuthTokenType.PASSWORD_RESET,
+    );
+
+    if (!stored) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const passwordHash = await argon2.hash(password);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: stored.userId },
+        data: {
+          passwordHash,
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+        },
+      }),
+      this.prisma.authToken.update({
+        where: { id: stored.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    await this.refreshTokenRepository.revokeAllForUser(stored.userId);
+
+    await this.auditService.logAuth(AuditAction.AUTH_PASSWORD_RESET, {
+      userId: stored.userId,
+      organisationId: stored.user.organisationId,
+      ipAddress: context.ipAddress,
+      correlationId: context.correlationId,
+    });
+
+    return { message: 'Password reset successfully' };
+  }
+
+  async verifyEmail(token: string, context: AuthContext = {}) {
+    const stored = await this.authTokenRepository.findValidByHash(
+      hashToken(token),
+      AuthTokenType.EMAIL_VERIFICATION,
+    );
+
+    if (!stored) {
+      throw new BadRequestException('Invalid or expired verification token');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: stored.userId },
+        data: { isVerified: true },
+      }),
+      this.prisma.authToken.update({
+        where: { id: stored.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    await this.auditService.logAuth(AuditAction.AUTH_EMAIL_VERIFIED, {
+      userId: stored.userId,
+      organisationId: stored.user.organisationId,
+      ipAddress: context.ipAddress,
+      correlationId: context.correlationId,
+    });
+
+    return { message: 'Email verified successfully', isVerified: true };
+  }
+
+  async resendVerificationEmail(userId: string, context: AuthContext = {}) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    if (user.isVerified) {
+      return { message: 'Email is already verified', isVerified: true };
+    }
+
+    await this.sendVerificationEmail(user, context);
+
+    return {
+      message: 'Verification email sent',
+      isVerified: false,
+    };
+  }
+
   getMfaStatus(userId: string) {
     return this.prisma.user.findUnique({
       where: { id: userId },
@@ -243,6 +386,42 @@ export class AuthService {
       mfaSecret: secret,
       qrCodeUrl: `otpauth://totp/EnterpriseProcurement:${userId}?secret=${secret}&issuer=EnterpriseProcurement`,
     };
+  }
+
+  private async sendVerificationEmail(user: User, context: AuthContext = {}) {
+    await this.authTokenRepository.invalidateUserTokens(
+      user.id,
+      AuthTokenType.EMAIL_VERIFICATION,
+    );
+
+    const rawToken = createTokenId();
+    const expiresAt = new Date(Date.now() + ms('24h'));
+
+    await this.authTokenRepository.create({
+      userId: user.id,
+      tokenHash: hashToken(rawToken),
+      type: AuthTokenType.EMAIL_VERIFICATION,
+      expiresAt,
+    });
+
+    const frontendUrl = this.configService.get<string>(
+      'FRONTEND_URL',
+      'http://localhost:3000',
+    );
+    const verifyUrl = `${frontendUrl}/verify-email?token=${rawToken}`;
+
+    await this.jobService.enqueueEmail({
+      to: user.email,
+      subject: 'Verify your ProcureAI email',
+      html: `<p>Verify your email address:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
+    });
+
+    await this.auditService.logAuth(AuditAction.AUTH_EMAIL_VERIFICATION_SENT, {
+      userId: user.id,
+      organisationId: user.organisationId,
+      ipAddress: context.ipAddress,
+      correlationId: context.correlationId,
+    });
   }
 
   private async handleFailedLogin(

@@ -27,6 +27,7 @@ model User {
   organisation   Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
 
   refreshTokens         RefreshToken[]
+  authTokens            AuthToken[]
   procurementRequests   ProcurementRequest[]
   approvalSteps         ApprovalStep[]
   createdRfqs           RFQ[]
@@ -771,6 +772,10 @@ enum AuditAction {
   AUTH_TOKEN_REVOKE
   AUTH_LOGIN_FAILED
   AUTH_ACCOUNT_LOCKED
+  AUTH_PASSWORD_RESET_REQUEST
+  AUTH_PASSWORD_RESET
+  AUTH_EMAIL_VERIFICATION_SENT
+  AUTH_EMAIL_VERIFIED
   APPROVAL_APPROVED
   APPROVAL_REJECTED
   PROCUREMENT_CREATED
@@ -872,4 +877,22 @@ model RefreshToken {
 
   @@index([userId])
   @@index([familyId])
+}
+
+enum AuthTokenType {
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+}
+
+model AuthToken {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String        @unique
+  type      AuthTokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut, Menu, Search } from "lucide-react";
+import { LogOut, Menu, Search, UserCircle } from "lucide-react";
+import Link from "next/link";
 
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -96,6 +97,13 @@ export function AppHeader() {
                 ) : null}
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/profile">
+                <UserCircle className="size-4" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"

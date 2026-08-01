@@ -6,13 +6,28 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 
+import {
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  clearSessionCookie,
+  getRememberMePreference,
+  setRememberMePreference,
+  setSessionCookie,
+} from "@/lib/auth/session";
 import { env } from "@/lib/env";
 
 import { parseApiError } from "./errors";
-import type { ApiSuccessResponse } from "./types";
+import type { ApiSuccessResponse, LoginResponse } from "./types";
 
-const ACCESS_TOKEN_KEY = "procureai_access_token";
-const REFRESH_TOKEN_KEY = "procureai_refresh_token";
+export {
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  clearSessionCookie,
+  getRememberMePreference,
+  setRememberMePreference,
+  setSessionCookie,
+};
+
 const CORRELATION_ID_HEADER = "x-correlation-id";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
@@ -35,49 +50,73 @@ function generateCorrelationId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-export function getStoredAccessToken(): string | null {
+function readToken(key: string): string | null {
   if (typeof window === "undefined") {
     return null;
   }
 
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return (
+    localStorage.getItem(key) ??
+    sessionStorage.getItem(key)
+  );
+}
+
+export function getStoredAccessToken(): string | null {
+  return readToken(ACCESS_TOKEN_KEY);
 }
 
 export function getStoredRefreshToken(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
+  return readToken(REFRESH_TOKEN_KEY);
 }
 
 export function setStoredTokens(
   accessToken: string | null,
   refreshToken: string | null,
+  rememberMe = getRememberMePreference(),
 ): void {
   if (typeof window === "undefined") {
     return;
   }
 
+  setRememberMePreference(rememberMe);
+
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+
+  const storage = rememberMe ? localStorage : sessionStorage;
+
   if (accessToken) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  } else {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    storage.setItem(ACCESS_TOKEN_KEY, accessToken);
   }
 
   if (refreshToken) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    storage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
+
+  if (accessToken) {
+    setSessionCookie();
   } else {
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    clearSessionCookie();
   }
 
   tokenListeners.forEach((listener) =>
     listener({ accessToken, refreshToken }),
   );
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("auth:tokens-updated", {
+        detail: { accessToken, refreshToken },
+      }),
+    );
+  }
 }
 
 export function clearStoredTokens(): void {
-  setStoredTokens(null, null);
+  setStoredTokens(null, null, getRememberMePreference());
+  clearSessionCookie();
 }
 
 export function subscribeToTokenChanges(listener: TokenListener): () => void {
@@ -111,12 +150,16 @@ async function refreshAccessToken(client: AxiosInstance): Promise<string | null>
     const response = await client.post<unknown>("/auth/refresh", {
       refreshToken,
     });
-    const data = unwrapResponse<{
-      accessToken: string;
-      refreshToken: string;
-    }>(response.data);
+    const data = unwrapResponse<LoginResponse>(response.data);
 
     setStoredTokens(data.accessToken, data.refreshToken);
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("auth:session-refreshed", { detail: data }),
+      );
+    }
+
     return data.accessToken;
   } catch {
     clearStoredTokens();
@@ -151,14 +194,18 @@ function createApiClient(): AxiosInstance {
     },
     async (error: AxiosError) => {
       const originalRequest = error.config as RetryableRequestConfig | undefined;
+      const url = originalRequest?.url ?? "";
 
       if (
         error.response?.status === 401 &&
         originalRequest &&
         !originalRequest._retry &&
-        !originalRequest.url?.includes("/auth/login") &&
-        !originalRequest.url?.includes("/auth/register") &&
-        !originalRequest.url?.includes("/auth/refresh")
+        !url.includes("/auth/login") &&
+        !url.includes("/auth/register") &&
+        !url.includes("/auth/refresh") &&
+        !url.includes("/auth/forgot-password") &&
+        !url.includes("/auth/reset-password") &&
+        !url.includes("/auth/verify-email")
       ) {
         originalRequest._retry = true;
 

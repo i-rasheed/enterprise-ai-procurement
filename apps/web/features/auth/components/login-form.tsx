@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { useLogin } from "@/features/auth/hooks/use-auth";
 import {
@@ -18,8 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { env } from "@/lib/env";
 
 export function LoginForm() {
   const login = useLogin();
@@ -29,6 +31,7 @@ export function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: true,
     },
   });
 
@@ -59,7 +62,15 @@ export function LoginForm() {
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                href="/forgot-password"
+                className="text-primary text-sm hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"
@@ -74,13 +85,27 @@ export function LoginForm() {
               </p>
             ) : null}
           </div>
+          <div className="flex items-center gap-2">
+            <Controller
+              control={form.control}
+              name="rememberMe"
+              render={({ field }) => (
+                <Checkbox
+                  id="rememberMe"
+                  checked={field.value}
+                  onCheckedChange={(checked) =>
+                    field.onChange(checked === true)
+                  }
+                />
+              )}
+            />
+            <Label htmlFor="rememberMe" className="font-normal">
+              Remember me for 30 days
+            </Label>
+          </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={login.isPending}
-          >
+          <Button type="submit" className="w-full" disabled={login.isPending}>
             {login.isPending ? "Signing in..." : "Sign in"}
           </Button>
           <p className="text-muted-foreground text-center text-sm">
@@ -88,6 +113,17 @@ export function LoginForm() {
             <Link href="/register" className="text-primary hover:underline">
               Create an account
             </Link>
+          </p>
+          <p className="text-muted-foreground text-center text-xs">
+            API docs:{" "}
+            <a
+              href={env.apiDocsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Swagger
+            </a>
           </p>
         </CardFooter>
       </form>
