@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Bot,
   CheckCircle2,
   ClipboardCheck,
   FileSearch,
@@ -85,6 +86,12 @@ export const mainNavigation: NavItem[] = [
     href: "/dashboard/contracts",
     icon: FileSignature,
     roles: ["ADMIN", "FINANCE", "PROCUREMENT_MANAGER", "USER"],
+  },
+  {
+    title: "AI Assistant",
+    href: "/dashboard/assistant",
+    icon: Bot,
+    roles: ["ADMIN", "FINANCE", "PROCUREMENT_MANAGER"],
   },
   {
     title: "Organization",
