@@ -594,3 +594,86 @@ export const awardResponseExample = {
   createdAt: '2026-08-01T12:00:00.000Z',
   updatedAt: '2026-08-01T12:00:00.000Z',
 };
+
+export const createPurchaseOrderRequestExample = {
+  awardId: 'clxaward123',
+  expectedDeliveryDate: '2026-11-30T00:00:00.000Z',
+  deliveryAddress: '123 Procurement Way, Suite 400, Lagos',
+  notes: 'Deliver to loading dock B between 9am and 5pm.',
+};
+
+export const updatePurchaseOrderRequestExample = {
+  expectedDeliveryDate: '2026-12-15T00:00:00.000Z',
+  paymentTerms: 'Net 45',
+  deliveryAddress: '456 Warehouse Road, Block C, Lagos',
+  notes: 'Updated delivery instructions for the vendor.',
+};
+
+export const issuePurchaseOrderRequestExample = {
+  issueDate: '2026-08-01T12:00:00.000Z',
+  notes: 'Please confirm receipt within 48 hours.',
+};
+
+export const acknowledgePurchaseOrderRequestExample = {
+  notes: 'Purchase order acknowledged. Delivery scheduled for November.',
+};
+
+export const purchaseOrderItemResponseExample = {
+  id: 'clxpoitem123',
+  description: 'Ergonomic office chair model X200',
+  quantity: 10,
+  unitPrice: 240.0,
+  totalPrice: 2400.0,
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const purchaseOrderResponseExample = {
+  id: 'clxpo123',
+  poNumber: 'PO-2026-000001',
+  organisationId: 'clxorg123',
+  vendor: {
+    id: 'clxvendor123',
+    name: 'Globex Supplies Ltd',
+    email: 'vendor@globex.com',
+  },
+  awardId: 'clxaward123',
+  procurementRequestId: 'clxprocurement123',
+  issuedBy: {
+    id: 'clx123abc456def',
+    email: 'admin@acme.com',
+    firstName: 'Jane',
+    lastName: 'Doe',
+    role: Role.ADMIN,
+  },
+  issueDate: null,
+  expectedDeliveryDate: '2026-11-30T00:00:00.000Z',
+  totalAmount: 2400.0,
+  currency: 'USD',
+  paymentTerms: 'Net 30',
+  deliveryAddress: '123 Procurement Way, Suite 400, Lagos',
+  notes: 'Deliver to loading dock B between 9am and 5pm.',
+  status: 'DRAFT',
+  items: [purchaseOrderItemResponseExample],
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const paginatedPurchaseOrderResponseExample = {
+  purchaseOrders: [purchaseOrderResponseExample],
+  page: 1,
+  limit: 20,
+  total: 1,
+  totalPages: 1,
+};
+
+export const deletePurchaseOrderResponseExample = {
+  message: 'Purchase order deleted successfully',
+};
+
+export const cancelPurchaseOrderResponseExample = {
+  purchaseOrder: {
+    ...purchaseOrderResponseExample,
+    status: 'CANCELLED',
+  },
+};
