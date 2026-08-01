@@ -45,6 +45,7 @@ model Organisation {
 
   users       User[]
   invitations Invitation[]
+  vendors     Vendor[]
 }
 
 enum InvitationStatus {
@@ -70,6 +71,46 @@ model Invitation {
   @@index([organisationId])
   @@index([email])
   @@index([status])
+}
+
+enum VendorStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BLACKLISTED
+}
+
+enum ComplianceStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Vendor {
+  id                      String           @id @default(cuid())
+  organisationId          String
+  organisation            Organisation     @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  name                    String
+  email                   String
+  phone                   String?
+  address                 String?
+  website                 String?
+  registrationNumber      String?
+  taxIdentificationNumber String?
+  category                String?
+  status                  VendorStatus     @default(ACTIVE)
+  rating                  Float?
+  complianceStatus        ComplianceStatus @default(PENDING)
+  notes                   String?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  @@unique([organisationId, email])
+  @@unique([organisationId, registrationNumber])
+  @@index([organisationId])
+  @@index([status])
+  @@index([complianceStatus])
+  @@index([category])
 }
 
 model RefreshToken {
