@@ -18,6 +18,10 @@ model User {
   lastName       String
   role           Role           @default(USER)
   isVerified     Boolean        @default(false)
+  failedLoginAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  mfaEnabled     Boolean        @default(false)
+  mfaSecret      String?
 
   organisationId String
   organisation   Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
@@ -36,6 +40,9 @@ model User {
   contractVersions      ContractVersion[]    @relation("ContractVersionCreatedBy")
   uploadedContractDocs  ContractDocument[]   @relation("ContractDocumentUploadedBy")
   aiPromptLogs          AiPromptLog[]
+  auditLogs             AuditLog[]
+  notifications         Notification[]
+  notificationPreference NotificationPreference?
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -69,6 +76,8 @@ model Organisation {
   contracts           Contract[]
   aiPromptLogs        AiPromptLog[]
   embeddingRecords    EmbeddingRecord[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
 }
 
 enum ProcurementPriority {
@@ -752,6 +761,103 @@ model EmbeddingRecord {
   @@unique([entityType, entityId])
   @@index([organisationId])
   @@index([entityType])
+}
+
+enum AuditAction {
+  AUTH_LOGIN
+  AUTH_LOGOUT
+  AUTH_REGISTER
+  AUTH_TOKEN_REFRESH
+  AUTH_TOKEN_REVOKE
+  AUTH_LOGIN_FAILED
+  AUTH_ACCOUNT_LOCKED
+  APPROVAL_APPROVED
+  APPROVAL_REJECTED
+  PROCUREMENT_CREATED
+  PROCUREMENT_UPDATED
+  PURCHASE_ORDER_CREATED
+  PURCHASE_ORDER_ISSUED
+  CONTRACT_CREATED
+  CONTRACT_UPDATED
+  INVOICE_CREATED
+  INVOICE_APPROVED
+  INVOICE_PAID
+  VENDOR_CREATED
+  VENDOR_UPDATED
+  ROLE_CHANGED
+  AI_USAGE
+  REPORT_EXPORT
+  REPORT_DOWNLOAD
+  USER_UPDATED
+}
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  organisationId String?
+  organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action         AuditAction
+  entityType     String?
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  correlationId  String?
+  createdAt      DateTime    @default(now())
+
+  @@index([organisationId])
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([correlationId])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ipAddress String?
+  userAgent String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+}
+
+model Notification {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  type           String
+  title          String
+  message        String
+  read           Boolean  @default(false)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([organisationId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model NotificationPreference {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled Boolean @default(true)
+  inAppEnabled Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model RefreshToken {

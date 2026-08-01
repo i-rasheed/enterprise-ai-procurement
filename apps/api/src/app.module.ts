@@ -1,34 +1,42 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
-import { HealthModule } from './health/health.module';
-import { DatabaseModule } from './database/database.module';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { OrganisationsModule } from './organisations/organisations.module';
-import { InvitationsModule } from './invitations/invitations.module';
-import { VendorsModule } from './vendors/vendors.module';
-import { ProcurementModule } from './procurement/procurement.module';
-import { ApprovalWorkflowsModule } from './approval-workflows/approval-workflows.module';
-import { RFQsModule } from './rfqs/rfqs.module';
-import { BidsModule } from './bids/bids.module';
-import { BidEvaluationsModule } from './bid-evaluations/bid-evaluations.module';
-import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
-import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
-import { InvoicesModule } from './invoices/invoices.module';
-import { ContractsModule } from './contracts/contracts.module';
-import { AiModule } from './ai/ai.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { AiModule } from './ai/ai.module';
+import { ApprovalWorkflowsModule } from './approval-workflows/approval-workflows.module';
+import { AuditModule } from './audit/audit.module';
+import { AuthModule } from './auth/auth.module';
+import { BidEvaluationsModule } from './bid-evaluations/bid-evaluations.module';
+import { BidsModule } from './bids/bids.module';
+import { CacheModule } from './cache/cache.module';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { ContractsModule } from './contracts/contracts.module';
+import { CoreModule } from './core/core.module';
+import { DatabaseModule } from './database/database.module';
+import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
+import { HealthModule } from './health/health.module';
+import { InvitationsModule } from './invitations/invitations.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { JobsModule } from './jobs/jobs.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { OrganisationsModule } from './organisations/organisations.module';
+import { ProcurementModule } from './procurement/procurement.module';
+import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { RFQsModule } from './rfqs/rfqs.module';
+import { StorageModule } from './storage/storage.module';
+import { UsersModule } from './users/users.module';
+import { VendorsModule } from './vendors/vendors.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ['.env', '../../.env'],
-    }),
+    CoreModule,
+    AuditModule,
+    CacheModule,
+    JobsModule,
+    StorageModule,
     HealthModule,
     DatabaseModule,
     UsersModule,
@@ -47,8 +55,19 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ContractsModule,
     AiModule,
     AnalyticsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}

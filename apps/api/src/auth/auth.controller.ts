@@ -1,5 +1,15 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
   ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
@@ -8,7 +18,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import type { Request } from 'express';
 
+import { CurrentUser } from '../auth/decorators/current-user/current-user.decorator';
+import { JwtAuthGuard } from './guards/jwt/jwt.guard';
 import {
   loginRequestExample,
   loginResponseExample,
@@ -18,6 +31,8 @@ import {
   registerRequestExample,
   registerResponseExample,
 } from '../common/swagger/swagger-examples';
+import type { JwtPayload } from '../common/types/jwt-payload.interface';
+import { CORRELATION_ID_HEADER } from '../common/constants/http.constants';
 import { AuthService } from './auth.service';
 import {
   LoginResponseDto,
@@ -33,120 +48,114 @@ import { RegisterDto } from './dto/register.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  private extractContext(req: Request) {
+    return {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+      correlationId:
+        (req as Request & { correlationId?: string }).correlationId ??
+        (req.headers[CORRELATION_ID_HEADER] as string | undefined),
+    };
+  }
+
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Register a new tenant',
-    description:
-      'Creates a new organisation and its first admin user. Email must be globally unique.',
-  })
+  @ApiOperation({ summary: 'Register a new tenant' })
   @ApiBody({
     type: RegisterDto,
-    description: 'Tenant registration payload',
     examples: {
       acmeCorp: {
         summary: 'Register Acme Corp',
-        description:
-          'Creates tenant "Acme Corp" with the registering user as admin',
         value: registerRequestExample,
       },
       globex: {
         summary: 'Register Globex Procurement',
-        description:
-          'Creates tenant "Globex Procurement" with the registering user as admin',
         value: registerProcurementRequestExample,
       },
     },
   })
   @ApiCreatedResponse({
-    description: 'Tenant and admin user created',
     type: RegisterResponseDto,
     schema: { example: registerResponseExample },
   })
   @ApiConflictResponse({ description: 'Email already registered' })
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  register(@Body() dto: RegisterDto, @Req() req: Request) {
+    return this.authService.register(dto, this.extractContext(req));
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Login',
-    description:
-      'Authenticates a user with email and password. Organisation context comes from the user record.',
-  })
+  @ApiOperation({ summary: 'Login' })
   @ApiBody({
     type: LoginDto,
-    description: 'Login credentials',
-    examples: {
-      acmeAdmin: {
-        summary: 'Login as Acme admin',
-        value: loginRequestExample,
-      },
-    },
+    examples: { default: { value: loginRequestExample } },
   })
   @ApiOkResponse({
-    description: 'Login successful',
     type: LoginResponseDto,
     schema: { example: loginResponseExample },
   })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  login(@Body() dto: LoginDto, @Req() req: Request) {
+    return this.authService.login(dto, this.extractContext(req));
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Refresh access token',
-    description:
-      'Rotates the refresh token and returns a new access/refresh token pair.',
-  })
+  @ApiOperation({ summary: 'Refresh access token' })
   @ApiBody({
     type: RefreshTokenDto,
-    description: 'Valid refresh token from login or register',
-    examples: {
-      default: {
-        summary: 'Refresh session',
-        value: refreshTokenRequestExample,
-      },
-    },
+    examples: { default: { value: refreshTokenRequestExample } },
   })
   @ApiOkResponse({
-    description: 'Tokens refreshed',
     type: LoginResponseDto,
     schema: { example: loginResponseExample },
   })
-  @ApiUnauthorizedResponse({
-    description: 'Invalid, expired, or reused refresh token',
-  })
-  refresh(@Body() dto: RefreshTokenDto) {
-    return this.authService.refresh(dto);
+  refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
+    return this.authService.refresh(dto, this.extractContext(req));
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Logout',
-    description: 'Revokes the provided refresh token.',
-  })
+  @ApiOperation({ summary: 'Logout' })
   @ApiBody({
     type: RefreshTokenDto,
-    description: 'Refresh token to revoke',
-    examples: {
-      default: {
-        summary: 'Logout current session',
-        value: refreshTokenRequestExample,
-      },
-    },
+    examples: { default: { value: refreshTokenRequestExample } },
   })
   @ApiOkResponse({
-    description: 'Logout successful',
     type: LogoutResponseDto,
     schema: { example: logoutResponseExample },
   })
-  @ApiUnauthorizedResponse({ description: 'Invalid refresh token' })
-  logout(@Body() dto: RefreshTokenDto) {
-    return this.authService.logout(dto);
+  logout(@Body() dto: RefreshTokenDto, @Req() req: Request) {
+    return this.authService.logout(dto, this.extractContext(req));
+  }
+
+  @Post('revoke-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Revoke all active sessions for current user' })
+  revokeAll(@CurrentUser() user: JwtPayload, @Req() req: Request) {
+    return this.authService.revokeAllSessions(
+      user.sub,
+      this.extractContext(req),
+    );
+  }
+
+  @Get('mfa/status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get MFA status (foundation)' })
+  mfaStatus(@CurrentUser() user: JwtPayload) {
+    return this.authService.getMfaStatus(user.sub);
+  }
+
+  @Post('mfa/setup')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Generate MFA secret (foundation — verification not yet enforced)',
+  })
+  setupMfa(@CurrentUser() user: JwtPayload) {
+    return this.authService.enableMfaFoundation(user.sub);
   }
 }
