@@ -23,7 +23,7 @@ import {
 const actions = [
   {
     label: "New procurement request",
-    href: "/dashboard/procurement",
+    href: "/dashboard/procurement/new",
     icon: PlusCircle,
   },
   {
