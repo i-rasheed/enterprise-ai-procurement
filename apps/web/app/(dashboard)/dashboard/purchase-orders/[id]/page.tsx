@@ -10,6 +10,7 @@ import { PoActionsPanel } from "@/features/purchase-orders/components/po-actions
 import { PoDetailHeader } from "@/features/purchase-orders/components/po-detail-header";
 import { PoItemsPanel } from "@/features/purchase-orders/components/po-items-panel";
 import { PoPdfPreview } from "@/features/purchase-orders/components/po-pdf-preview";
+import { PoGrnPanel } from "@/features/goods-receipts/components/po-grn-panel";
 import {
   canEditPurchaseOrder,
   canManagePurchaseOrders,
@@ -82,6 +83,8 @@ export default function PurchaseOrderDetailPage() {
           userEmail={user?.email}
         />
       </div>
+
+      <PoGrnPanel po={po} canManage={canManage} />
 
       {po.deliveryAddress || po.notes ? (
         <div className="grid gap-4 lg:grid-cols-2">
