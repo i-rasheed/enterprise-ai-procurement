@@ -162,3 +162,55 @@ export const acceptInvitationResponseExample = {
 export const cancelInvitationResponseExample = {
   message: 'Invitation cancelled successfully',
 };
+
+export const createVendorRequestExample = {
+  name: 'Globex Supplies Ltd',
+  email: 'contact@globex.com',
+  phone: '+1-555-0100',
+  address: '123 Industrial Way, Lagos',
+  website: 'https://globex.com',
+  registrationNumber: 'RC-123456',
+  taxIdentificationNumber: 'TIN-987654',
+  category: 'Office Supplies',
+  status: 'ACTIVE',
+  rating: 4.5,
+  complianceStatus: 'PENDING',
+  notes: 'Preferred supplier for stationery.',
+};
+
+export const updateVendorRequestExample = {
+  status: 'ACTIVE',
+  complianceStatus: 'VERIFIED',
+  rating: 4.8,
+};
+
+export const vendorResponseExample = {
+  id: 'clxvendor123',
+  organisationId: 'clx789ghi012jkl',
+  name: 'Globex Supplies Ltd',
+  email: 'contact@globex.com',
+  phone: '+1-555-0100',
+  address: '123 Industrial Way, Lagos',
+  website: 'https://globex.com',
+  registrationNumber: 'RC-123456',
+  taxIdentificationNumber: 'TIN-987654',
+  category: 'Office Supplies',
+  status: 'ACTIVE',
+  rating: 4.5,
+  complianceStatus: 'PENDING',
+  notes: 'Preferred supplier for stationery.',
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const paginatedVendorResponseExample = {
+  vendors: [vendorResponseExample],
+  page: 1,
+  limit: 20,
+  total: 1,
+  totalPages: 1,
+};
+
+export const deleteVendorResponseExample = {
+  message: 'Vendor deleted successfully',
+};
