@@ -27,6 +27,8 @@ model User {
   approvalSteps         ApprovalStep[]
   createdRfqs           RFQ[]
   submittedBids         Bid[]
+  bidEvaluations        BidEvaluation[]
+  awards                Award[]              @relation("AwardedBy")
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -53,6 +55,7 @@ model Organisation {
   invitations         Invitation[]
   vendors             Vendor[]
   procurementRequests ProcurementRequest[]
+  evaluationCriteria  EvaluationCriteria[]
 }
 
 enum ProcurementPriority {
@@ -88,6 +91,7 @@ model ProcurementRequest {
   items                ProcurementItem[]
   approvalWorkflow     ApprovalWorkflow?
   rfqs                 RFQ[]
+  awards               Award[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 
@@ -221,6 +225,7 @@ enum BidStatus {
   SUBMITTED
   WITHDRAWN
   DISQUALIFIED
+  AWARDED
 }
 
 model Bid {
@@ -242,6 +247,8 @@ model Bid {
   submittedAt    DateTime?
   items          BidItem[]
   attachments    BidAttachment[]
+  evaluations    BidEvaluation[]
+  award          Award?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -275,6 +282,56 @@ model BidAttachment {
   uploadedAt DateTime @default(now())
 
   @@index([bidId])
+}
+
+model EvaluationCriteria {
+  id             String       @id @default(cuid())
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  weight         Float        @default(1)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organisationId])
+}
+
+model BidEvaluation {
+  id               String   @id @default(cuid())
+  bidId            String
+  bid              Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  evaluatorId      String
+  evaluator        User     @relation(fields: [evaluatorId], references: [id], onDelete: Cascade)
+  technicalScore   Float
+  commercialScore  Float
+  complianceScore  Float
+  deliveryScore    Float
+  totalScore       Float
+  comments         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([bidId, evaluatorId])
+  @@index([bidId])
+  @@index([evaluatorId])
+}
+
+model Award {
+  id                   String             @id @default(cuid())
+  bidId                String             @unique
+  bid                  Bid                @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  procurementRequestId String             @unique
+  procurementRequest   ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  awardedById          String
+  awardedBy            User               @relation("AwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+  awardReason          String
+  awardedAt            DateTime           @default(now())
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([procurementRequestId])
+  @@index([awardedById])
 }
 
 enum InvitationStatus {

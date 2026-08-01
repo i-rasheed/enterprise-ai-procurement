@@ -15,6 +15,7 @@ import { ProcurementModule } from './procurement/procurement.module';
 import { ApprovalWorkflowsModule } from './approval-workflows/approval-workflows.module';
 import { RFQsModule } from './rfqs/rfqs.module';
 import { BidsModule } from './bids/bids.module';
+import { BidEvaluationsModule } from './bid-evaluations/bid-evaluations.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { BidsModule } from './bids/bids.module';
     ApprovalWorkflowsModule,
     RFQsModule,
     BidsModule,
+    BidEvaluationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

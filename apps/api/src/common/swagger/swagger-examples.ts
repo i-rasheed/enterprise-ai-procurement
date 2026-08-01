@@ -514,3 +514,83 @@ export const deleteBidResponseExample = {
 export const deleteBidItemResponseExample = {
   message: 'Bid item removed successfully',
 };
+
+export const createEvaluationRequestExample = {
+  bidId: 'clxbid123',
+  technicalScore: 85,
+  commercialScore: 90,
+  complianceScore: 88,
+  deliveryScore: 80,
+  comments: 'Strong technical proposal with competitive pricing.',
+};
+
+export const updateEvaluationRequestExample = {
+  technicalScore: 87,
+  commercialScore: 92,
+  comments: 'Updated score after clarification call.',
+};
+
+export const bidEvaluationResponseExample = {
+  id: 'clxeval123',
+  bidId: 'clxbid123',
+  evaluator: {
+    id: 'clx123abc456def',
+    email: 'manager@globex.com',
+    firstName: 'John',
+    lastName: 'Smith',
+    role: Role.PROCUREMENT_MANAGER,
+  },
+  technicalScore: 85,
+  commercialScore: 90,
+  complianceScore: 88,
+  deliveryScore: 80,
+  totalScore: 343,
+  comments: 'Strong technical proposal with competitive pricing.',
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const bidEvaluationListResponseExample = {
+  bidId: 'clxbid123',
+  evaluations: [bidEvaluationResponseExample],
+  averageTotalScore: 343,
+};
+
+export const procurementRankingsResponseExample = {
+  procurementRequestId: 'clxprocurement123',
+  rankings: [
+    {
+      rank: 1,
+      bidId: 'clxbid123',
+      bidNumber: 'BID-2026-000001',
+      vendorName: 'Globex Supplies Ltd',
+      totalScore: 343,
+      totalAmount: 2400.0,
+      evaluationCount: 1,
+    },
+  ],
+};
+
+export const awardBidRequestExample = {
+  bidId: 'clxbid123',
+  awardReason:
+    'Best overall score with competitive pricing and verified compliance.',
+};
+
+export const awardResponseExample = {
+  id: 'clxaward123',
+  bidId: 'clxbid123',
+  procurementRequestId: 'clxprocurement123',
+  awardedBy: {
+    id: 'clx123abc456def',
+    email: 'admin@acme.com',
+    firstName: 'Jane',
+    lastName: 'Doe',
+    role: Role.ADMIN,
+  },
+  awardReason:
+    'Best overall score with competitive pricing and verified compliance.',
+  awardedAt: '2026-08-01T12:00:00.000Z',
+  createdAt: '2026-08-01T12:00:00.000Z',
+  updatedAt: '2026-08-01T12:00:00.000Z',
+};
