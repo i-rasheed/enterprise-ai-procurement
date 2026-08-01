@@ -1,6 +1,9 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const PUSH_TOKEN_KEY = "procureai.pushToken";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -37,7 +40,12 @@ export async function registerForPushNotifications(): Promise<string | null> {
   }
 
   const token = await Notifications.getExpoPushTokenAsync();
+  await AsyncStorage.setItem(PUSH_TOKEN_KEY, token.data);
   return token.data;
+}
+
+export async function getStoredPushToken() {
+  return AsyncStorage.getItem(PUSH_TOKEN_KEY);
 }
 
 export function addNotificationReceivedListener(
@@ -50,4 +58,11 @@ export function addNotificationResponseListener(
   listener: (response: Notifications.NotificationResponse) => void,
 ) {
   return Notifications.addNotificationResponseReceivedListener(listener);
+}
+
+export async function scheduleLocalNotification(title: string, body: string) {
+  await Notifications.scheduleNotificationAsync({
+    content: { title, body },
+    trigger: null,
+  });
 }

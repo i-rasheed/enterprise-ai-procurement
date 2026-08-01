@@ -5,12 +5,14 @@ Expo React Native app for the enterprise procurement platform.
 ## Features
 
 - JWT authentication with secure token storage
-- Expo Router navigation with auth and tab flows
-- Axios API client with refresh-token handling
-- Light/dark theme system
-- Offline cache and React Query persistence
-- Push notification registration and in-app alerts
-- Reusable UI components
+- Dashboard with executive KPIs and quick links
+- Approvals inbox with approve/reject (offline queue support)
+- Purchase orders, invoices, and contracts lists + detail views
+- Vendor portal hub (RFQs, bids, POs, invoices, contracts)
+- AI assistant chat with persisted conversation history
+- Push notification registration, preferences, and local alerts
+- Offline cache, React Query persistence, and reconnect sync queue
+- Reusable UI components and tab + stack navigation
 
 ## Setup
 

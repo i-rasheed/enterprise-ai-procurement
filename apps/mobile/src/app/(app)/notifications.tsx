@@ -15,10 +15,7 @@ export default function NotificationsScreen() {
   const markRead = useMarkNotificationRead();
 
   return (
-    <Screen
-      title="Notifications"
-      description="Approvals, updates, and procurement alerts"
-      loading={notificationsQuery.isLoading}>
+    <Screen loading={notificationsQuery.isLoading}>
       {notificationsQuery.isError ? (
         <ErrorState
           message={notificationsQuery.error.message}
@@ -51,5 +48,6 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   list: {
     gap: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
 });
