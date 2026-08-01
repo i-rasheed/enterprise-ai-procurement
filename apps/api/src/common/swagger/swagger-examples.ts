@@ -294,3 +294,51 @@ export const deleteProcurementResponseExample = {
 export const deleteProcurementItemResponseExample = {
   message: 'Line item removed successfully',
 };
+
+export const approveRequestExample = {
+  comments: 'Budget aligns with department plan.',
+};
+
+export const rejectRequestExample = {
+  comments: 'Budget exceeds department allocation for this quarter.',
+};
+
+export const approvalStepApproverExample = {
+  id: 'clx123abc456def',
+  email: 'admin@acme.com',
+  firstName: 'Jane',
+  lastName: 'Doe',
+  role: Role.ADMIN,
+};
+
+export const approvalStepResponseExample = {
+  id: 'clxstep123',
+  workflowId: 'clxworkflow123',
+  approver: approvalStepApproverExample,
+  role: 'DEPARTMENT_HEAD',
+  level: 1,
+  status: 'PENDING',
+  comments: null,
+  actedAt: null,
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const approvalWorkflowResponseExample = {
+  id: 'clxworkflow123',
+  procurementRequestId: 'clxprocurement123',
+  currentLevel: 1,
+  status: 'IN_PROGRESS',
+  steps: [approvalStepResponseExample],
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const pendingApprovalsResponseExample = {
+  pendingApprovals: [approvalStepResponseExample],
+};
+
+export const approvalHistoryResponseExample = {
+  procurementRequestId: 'clxprocurement123',
+  workflow: approvalWorkflowResponseExample,
+};

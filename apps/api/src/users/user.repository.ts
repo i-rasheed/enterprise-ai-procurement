@@ -30,6 +30,13 @@ export class UserRepository {
     });
   }
 
+  findFirstByOrganisationAndRole(organisationId: string, role: Role) {
+    return this.prisma.user.findFirst({
+      where: { organisationId, role },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
   async create(data: {
     email: string;
     firstName: string;
