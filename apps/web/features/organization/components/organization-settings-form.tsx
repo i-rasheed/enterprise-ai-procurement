@@ -54,7 +54,7 @@ export function OrganizationSettingsForm() {
             {organization.users.length}
           </p>
           <p className="text-muted-foreground">
-            Notification preferences are managed from your profile page.
+            Manage notification delivery from Settings → Notifications.
           </p>
         </CardContent>
       </Card>
