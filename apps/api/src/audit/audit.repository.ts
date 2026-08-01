@@ -43,6 +43,24 @@ export class AuditRepository {
     });
   }
 
+  findByOrganisationPaginated(
+    organisationId: string,
+    page: number,
+    limit: number,
+  ) {
+    const skip = (page - 1) * limit;
+
+    return Promise.all([
+      this.prisma.auditLog.findMany({
+        where: { organisationId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.auditLog.count({ where: { organisationId } }),
+    ]);
+  }
+
   recordLoginAttempt(
     email: string,
     success: boolean,

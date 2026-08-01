@@ -222,7 +222,29 @@ export class ApprovalRepository {
             role: true,
           },
         },
-        workflow: true,
+        workflow: {
+          include: {
+            procurementRequest: {
+              select: {
+                id: true,
+                title: true,
+                department: true,
+                estimatedBudget: true,
+                currency: true,
+                priority: true,
+                status: true,
+                requester: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
