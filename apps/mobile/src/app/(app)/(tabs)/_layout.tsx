@@ -28,17 +28,31 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="notifications"
+        name="approvals"
         options={{
-          title: "Alerts",
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
-          tabBarIcon: ({ color }) => <TabIcon label="🔔" color={color} />,
+          title: "Approvals",
+          tabBarIcon: ({ color }) => <TabIcon label="✓" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="work"
+        options={{
+          title: "Work",
+          tabBarIcon: ({ color }) => <TabIcon label="📋" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="ai"
+        options={{
+          title: "AI",
+          tabBarIcon: ({ color }) => <TabIcon label="✨" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           tabBarIcon: ({ color }) => <TabIcon label="👤" color={color} />,
         }}
       />

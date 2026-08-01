@@ -1,15 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getErrorMessage } from "@/lib/api";
-import { getOfflineCache, setOfflineCache } from "@/lib/offline/cache";
+import { fetchWithOfflineCache } from "@/lib/offline/fetch-with-cache";
+import { enqueueSyncItem } from "@/lib/offline/sync-queue";
 import { isOnline } from "@/lib/offline/network";
+import { notificationsRepository } from "@/features/approvals/api/approval.repository";
 import { useAuthStore } from "@/stores/auth-store";
 import { useOfflineStore } from "@/stores/offline-store";
 
-import {
-  dashboardRepository,
-  notificationsRepository,
-} from "../api/dashboard.repository";
+import { dashboardRepository } from "../api/dashboard.repository";
 
 export const dashboardQueryKeys = {
   executive: ["dashboard", "executive"] as const,
@@ -24,24 +23,13 @@ export function useExecutiveDashboard() {
 
   return useQuery({
     queryKey: dashboardQueryKeys.executive,
-    queryFn: async () => {
-      try {
-        const dashboard = await dashboardRepository.getExecutiveDashboard();
-        await setOfflineCache("dashboard.executive", dashboard);
-        markSynced();
-        return dashboard;
-      } catch (error) {
-        if (!isOnline(network)) {
-          const cached = await getOfflineCache<
-            Awaited<ReturnType<typeof dashboardRepository.getExecutiveDashboard>>
-          >("dashboard.executive");
-          if (cached) {
-            return cached;
-          }
-        }
-        throw error;
-      }
-    },
+    queryFn: () =>
+      fetchWithOfflineCache(
+        "dashboard.executive",
+        () => dashboardRepository.getExecutiveDashboard(),
+        network,
+        markSynced,
+      ),
     enabled: isAuthenticated,
     staleTime: 60_000,
   });
@@ -53,23 +41,12 @@ export function useNotifications() {
 
   return useQuery({
     queryKey: dashboardQueryKeys.notifications,
-    queryFn: async () => {
-      try {
-        const notifications = await notificationsRepository.list();
-        await setOfflineCache("notifications", notifications);
-        return notifications;
-      } catch (error) {
-        if (!isOnline(network)) {
-          const cached = await getOfflineCache<
-            Awaited<ReturnType<typeof notificationsRepository.list>>
-          >("notifications");
-          if (cached) {
-            return cached;
-          }
-        }
-        throw error;
-      }
-    },
+    queryFn: () =>
+      fetchWithOfflineCache(
+        "notifications",
+        () => notificationsRepository.list(),
+        network,
+      ),
     enabled: isAuthenticated,
     staleTime: 30_000,
   });
@@ -89,9 +66,23 @@ export function useUnreadNotificationCount() {
 
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
+  const network = useOfflineStore((state) => state.network);
+  const setPendingSyncCount = useOfflineStore((state) => state.setPendingSyncCount);
 
   return useMutation({
-    mutationFn: (id: string) => notificationsRepository.markRead(id),
+    mutationFn: async (id: string) => {
+      if (!isOnline(network)) {
+        const queue = await enqueueSyncItem({
+          id: `${id}-read-${Date.now()}`,
+          type: "mark-notification-read",
+          payload: { id },
+        });
+        setPendingSyncCount(queue.length);
+        return { queued: true };
+      }
+
+      return notificationsRepository.markRead(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.notifications });
       queryClient.invalidateQueries({
