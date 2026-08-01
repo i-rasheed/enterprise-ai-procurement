@@ -30,6 +30,7 @@ model User {
   bidEvaluations        BidEvaluation[]
   awards                Award[]              @relation("AwardedBy")
   issuedPurchaseOrders  PurchaseOrder[]      @relation("IssuedBy")
+  goodsReceipts         GoodsReceipt[]       @relation("ReceivedBy")
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -58,6 +59,7 @@ model Organisation {
   procurementRequests ProcurementRequest[]
   evaluationCriteria  EvaluationCriteria[]
   purchaseOrders      PurchaseOrder[]
+  goodsReceipts       GoodsReceipt[]
 }
 
 enum ProcurementPriority {
@@ -369,6 +371,7 @@ model PurchaseOrder {
   notes                String?
   status               PurchaseOrderStatus   @default(DRAFT)
   items                PurchaseOrderItem[]
+  goodsReceipts        GoodsReceipt[]
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
@@ -387,10 +390,59 @@ model PurchaseOrderItem {
   quantity        Int
   unitPrice       Decimal       @db.Decimal(14, 2)
   totalPrice      Decimal       @db.Decimal(14, 2)
+  goodsReceiptItems GoodsReceiptItem[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   @@index([purchaseOrderId])
+}
+
+enum GoodsReceiptStatus {
+  DRAFT
+  RECEIVED
+  PARTIALLY_RECEIVED
+  REJECTED
+  COMPLETED
+}
+
+model GoodsReceipt {
+  id              String             @id @default(cuid())
+  receiptNumber   String             @unique
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  organisationId  String
+  organisation    Organisation       @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  receivedById    String
+  receivedBy      User               @relation("ReceivedBy", fields: [receivedById], references: [id], onDelete: Cascade)
+  receiptDate     DateTime
+  warehouse       String?
+  notes           String?
+  status          GoodsReceiptStatus @default(DRAFT)
+  items           GoodsReceiptItem[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([organisationId])
+  @@index([receivedById])
+  @@index([status])
+}
+
+model GoodsReceiptItem {
+  id                  String            @id @default(cuid())
+  goodsReceiptId      String
+  goodsReceipt        GoodsReceipt      @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  purchaseOrderItemId String
+  purchaseOrderItem   PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id], onDelete: Cascade)
+  quantityOrdered     Int
+  quantityReceived    Int               @default(0)
+  quantityRejected    Int               @default(0)
+  remarks             String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([goodsReceiptId])
+  @@index([purchaseOrderItemId])
 }
 
 enum InvitationStatus {
