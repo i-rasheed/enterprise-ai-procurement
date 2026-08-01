@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ExecutiveDashboard } from "@/features/dashboard/components/executive-dashboard";
+import { DynamicExecutiveDashboard } from "@/lib/performance/dynamic-imports";
 
 export const metadata: Metadata = {
   title: "Executive Dashboard",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardPage() {
-  return <ExecutiveDashboard />;
+  return <DynamicExecutiveDashboard />;
 }

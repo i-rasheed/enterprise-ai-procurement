@@ -53,4 +53,6 @@ readinessProbe:
 
 ## CI/CD
 
-GitHub Actions runs lint, build, unit tests, e2e tests, and Docker build on every PR to `develop`/`main`.
+GitHub Actions runs lint, build, web unit/e2e tests, API tests, and Docker builds for both API and web on every PR to `develop`/`main`.
+
+See also [Frontend Deployment Guide](./FRONTEND_DEPLOYMENT.md).

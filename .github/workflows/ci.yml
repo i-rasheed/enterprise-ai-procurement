@@ -38,6 +38,8 @@ jobs:
       JWT_REFRESH_SECRET: ci-refresh-secret-minimum-32-chars
       ENABLE_RESPONSE_WRAPPER: "false"
       NODE_ENV: test
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
 
     steps:
       - uses: actions/checkout@v4
@@ -63,10 +65,19 @@ jobs:
 
       - run: pnpm build
 
-      - name: Unit tests with coverage
+      - name: Web unit tests
+        run: pnpm --filter web test
+
+      - name: Install Playwright browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Web e2e smoke tests
+        run: pnpm --filter web test:e2e
+
+      - name: API unit tests with coverage
         run: pnpm --filter api test:cov
 
-      - name: E2E tests
+      - name: API e2e tests
         run: pnpm --filter api test:e2e
 
   docker:
@@ -75,5 +86,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build production Docker image
+      - name: Build API Docker image
         run: docker build -f apps/api/Dockerfile -t enterprise-procurement-api:ci .
+
+      - name: Build Web Docker image
+        run: |
+          docker build -f apps/web/Dockerfile \
+            --build-arg NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1 \
+            --build-arg NEXT_PUBLIC_SITE_URL=http://localhost:3000 \
+            -t enterprise-procurement-web:ci .

@@ -2,7 +2,7 @@
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
-import { AssistantShell } from "@/features/assistant/components/assistant-shell";
+import { DynamicAssistantShell } from "@/lib/performance/dynamic-imports";
 import { canAccessAssistant } from "@/features/assistant/config/permissions";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -25,7 +25,7 @@ export default function AssistantPage() {
         title="AI Procurement Assistant"
         description="Chat with your procurement data, run semantic search, summarize contracts, analyze vendor risk and spend, and get AI recommendations."
       />
-      <AssistantShell />
+      <DynamicAssistantShell />
     </div>
   );
 }

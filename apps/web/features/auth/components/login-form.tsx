@@ -38,7 +38,7 @@ export function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sign in</CardTitle>
+        <h1 className="leading-none font-semibold">Sign in</h1>
         <CardDescription>
           Access your procurement workspace with your organisation credentials.
         </CardDescription>

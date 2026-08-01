@@ -7,6 +7,7 @@ import { AppFooter } from "@/components/layout/app-footer";
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { DashboardSkeleton } from "@/components/shared/page-header";
+import { SkipLink } from "@/components/shared/skip-link";
 import { useAuth } from "@/providers/auth-provider";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -35,12 +36,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
+      <SkipLink />
       <div className="hidden md:block">
         <AppSidebar className="fixed inset-y-0 left-0 z-30" />
       </div>
       <div className="flex min-h-screen flex-1 flex-col md:pl-64">
         <AppHeader />
-        <main className="flex-1 px-4 py-6 md:px-6">
+        <main id="main-content" className="flex-1 px-4 py-6 md:px-6" tabIndex={-1}>
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
         <AppFooter />
