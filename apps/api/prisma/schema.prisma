@@ -26,6 +26,7 @@ model User {
   procurementRequests   ProcurementRequest[]
   approvalSteps         ApprovalStep[]
   createdRfqs           RFQ[]
+  submittedBids         Bid[]
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -137,6 +138,7 @@ model RFQ {
   createdById          String
   createdBy            User               @relation(fields: [createdById], references: [id], onDelete: Cascade)
   vendors              RFQVendor[]
+  bids                 Bid[]
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
@@ -214,6 +216,67 @@ model ApprovalStep {
   @@index([status])
 }
 
+enum BidStatus {
+  DRAFT
+  SUBMITTED
+  WITHDRAWN
+  DISQUALIFIED
+}
+
+model Bid {
+  id             String         @id @default(cuid())
+  rfqId          String
+  rfq            RFQ            @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  vendorId       String
+  vendor         Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  submittedById  String
+  submittedBy    User           @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  bidNumber      String         @unique
+  totalAmount    Decimal        @db.Decimal(14, 2) @default(0)
+  currency       String         @default("USD")
+  deliveryPeriod String?
+  paymentTerms   String?
+  warrantyPeriod String?
+  notes          String?
+  status         BidStatus      @default(DRAFT)
+  submittedAt    DateTime?
+  items          BidItem[]
+  attachments    BidAttachment[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([rfqId])
+  @@index([vendorId])
+  @@index([submittedById])
+  @@index([status])
+}
+
+model BidItem {
+  id          String   @id @default(cuid())
+  bidId       String
+  bid         Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(14, 2)
+  totalPrice  Decimal  @db.Decimal(14, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([bidId])
+}
+
+model BidAttachment {
+  id         String   @id @default(cuid())
+  bidId      String
+  bid        Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  fileName   String
+  fileUrl    String
+  fileType   String
+  uploadedAt DateTime @default(now())
+
+  @@index([bidId])
+}
+
 enum InvitationStatus {
   PENDING
   ACCEPTED
@@ -269,6 +332,7 @@ model Vendor {
   complianceStatus        ComplianceStatus @default(PENDING)
   notes                   String?
   rfqVendors              RFQVendor[]
+  bids                    Bid[]
   createdAt               DateTime         @default(now())
   updatedAt               DateTime         @updatedAt
 
