@@ -25,6 +25,7 @@ model User {
   refreshTokens         RefreshToken[]
   procurementRequests   ProcurementRequest[]
   approvalSteps         ApprovalStep[]
+  createdRfqs           RFQ[]
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -85,6 +86,7 @@ model ProcurementRequest {
   requiredDeliveryDate DateTime
   items                ProcurementItem[]
   approvalWorkflow     ApprovalWorkflow?
+  rfqs                 RFQ[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 
@@ -107,6 +109,56 @@ model ProcurementItem {
   updatedAt            DateTime           @updatedAt
 
   @@index([procurementRequestId])
+}
+
+enum RFQStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  CANCELLED
+}
+
+enum VendorInvitationStatus {
+  INVITED
+  VIEWED
+  RESPONDED
+  DECLINED
+}
+
+model RFQ {
+  id                   String             @id @default(cuid())
+  procurementRequestId String
+  procurementRequest   ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  rfqNumber            String             @unique
+  title                String
+  description          String
+  closingDate          DateTime
+  status               RFQStatus          @default(DRAFT)
+  createdById          String
+  createdBy            User               @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  vendors              RFQVendor[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([procurementRequestId])
+  @@index([status])
+  @@index([createdById])
+}
+
+model RFQVendor {
+  id          String                 @id @default(cuid())
+  rfqId       String
+  rfq         RFQ                    @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  vendorId    String
+  vendor      Vendor                 @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  invitedAt   DateTime               @default(now())
+  respondedAt DateTime?
+  status      VendorInvitationStatus @default(INVITED)
+
+  @@unique([rfqId, vendorId])
+  @@index([rfqId])
+  @@index([vendorId])
+  @@index([status])
 }
 
 enum ApprovalStatus {
@@ -216,6 +268,7 @@ model Vendor {
   rating                  Float?
   complianceStatus        ComplianceStatus @default(PENDING)
   notes                   String?
+  rfqVendors              RFQVendor[]
   createdAt               DateTime         @default(now())
   updatedAt               DateTime         @updatedAt
 
