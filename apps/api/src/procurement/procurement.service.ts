@@ -1,11 +1,15 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/library';
 import { ProcurementStatus } from '@prisma/client';
+
+import { ApprovalWorkflowService } from '../approval-workflows/approval-workflow.service';
 
 import { CreateProcurementItemDto } from './dto/create-procurement-item.dto';
 import { CreateProcurementRequestDto } from './dto/create-procurement-request.dto';
@@ -19,7 +23,11 @@ import {
 
 @Injectable()
 export class ProcurementService {
-  constructor(private readonly procurementRepository: ProcurementRepository) {}
+  constructor(
+    private readonly procurementRepository: ProcurementRepository,
+    @Inject(forwardRef(() => ApprovalWorkflowService))
+    private readonly approvalWorkflowService: ApprovalWorkflowService,
+  ) {}
 
   createDraft(
     organisationId: string,
@@ -134,11 +142,16 @@ export class ProcurementService {
     }
 
     const submitted = await this.procurementRepository.submit(id);
+    const workflow = await this.approvalWorkflowService.startWorkflow(
+      organisationId,
+      id,
+    );
     const mapped = this.mapRequest(submitted);
 
     return {
       ...mapped,
       submissionNote: dto.submissionNote,
+      approvalWorkflow: workflow,
     };
   }
 

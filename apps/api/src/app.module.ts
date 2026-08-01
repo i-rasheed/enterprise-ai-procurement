@@ -12,6 +12,7 @@ import { OrganisationsModule } from './organisations/organisations.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { VendorsModule } from './vendors/vendors.module';
 import { ProcurementModule } from './procurement/procurement.module';
+import { ApprovalWorkflowsModule } from './approval-workflows/approval-workflows.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ProcurementModule } from './procurement/procurement.module';
     InvitationsModule,
     VendorsModule,
     ProcurementModule,
+    ApprovalWorkflowsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
