@@ -20,6 +20,7 @@ import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { ContractsModule } from './contracts/contracts.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ContractsModule } from './contracts/contracts.module';
     GoodsReceiptsModule,
     InvoicesModule,
     ContractsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

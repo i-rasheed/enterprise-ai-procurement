@@ -1016,3 +1016,240 @@ export const contractHistoryResponseExample = {
 export const deleteContractResponseExample = {
   message: 'Contract deleted successfully',
 };
+
+export const contractSummaryResponseExample = {
+  contractId: 'clxcontract123',
+  executiveSummary:
+    'Three-year IT services agreement with Globex Supplies covering cloud infrastructure support and SLA-backed uptime guarantees.',
+  importantDates: [
+    {
+      label: 'Contract Start',
+      date: '2026-01-01',
+      description: 'Service commencement date',
+    },
+    {
+      label: 'Contract End',
+      date: '2026-12-31',
+      description: 'Initial term expiry',
+    },
+  ],
+  obligations: [
+    'Monthly SLA reporting within 5 business days',
+    'Quarterly business review with procurement team',
+    'Incident response within 4 hours for critical issues',
+  ],
+  risks: [
+    {
+      risk: 'Auto-renewal without spend cap',
+      severity: 'MEDIUM',
+      mitigation: 'Negotiate renewal notice period and price cap',
+    },
+  ],
+  renewalInformation: {
+    autoRenewal: false,
+    renewalDate: '2026-12-01',
+    noticePeriod: '90 days',
+    terms: 'Annual renewal at CPI adjustment',
+  },
+};
+
+export const clauseExtractionResponseExample = {
+  contractId: 'clxcontract123',
+  clauses: {
+    paymentTerms: {
+      found: true,
+      summary: 'Net 30 payment terms',
+      details: 'Invoices payable within 30 days of receipt',
+    },
+    termination: {
+      found: true,
+      summary: 'Termination for convenience with 60-day notice',
+      details: 'Either party may terminate with written 60-day notice',
+    },
+    confidentiality: {
+      found: true,
+      summary: 'Mutual NDA for 3 years post-termination',
+      details: 'Both parties bound to protect confidential information',
+    },
+    liability: {
+      found: true,
+      summary: 'Liability capped at contract value',
+      details: 'Maximum aggregate liability limited to total contract value',
+    },
+    warranty: {
+      found: true,
+      summary: '12-month workmanship warranty',
+      details: 'Vendor warrants services meet agreed specifications',
+    },
+    penalties: {
+      found: true,
+      summary: 'SLA breach penalties apply',
+      details: '5% service credit for uptime below 99.5%',
+    },
+    forceMajeure: {
+      found: true,
+      summary: 'Standard force majeure clause included',
+      details: 'Excused performance for events beyond reasonable control',
+    },
+    renewal: {
+      found: true,
+      summary: 'Annual renewal with 90-day notice',
+      details: 'Contract renews annually unless terminated with notice',
+    },
+  },
+};
+
+export const vendorRiskResponseExample = {
+  vendorId: 'clxvendor123',
+  riskScore: 42,
+  financialRisk: {
+    score: 35,
+    factors: ['Stable payment history', 'No outstanding disputes'],
+  },
+  deliveryRisk: {
+    score: 55,
+    factors: [
+      'Two partial deliveries in last quarter',
+      'Average lead time increasing',
+    ],
+  },
+  complianceRisk: {
+    score: 20,
+    factors: ['Verified compliance status', 'Valid tax registration'],
+  },
+  operationalRisk: {
+    score: 40,
+    factors: [
+      'Single-source dependency for IT hardware',
+      'Limited backup suppliers',
+    ],
+  },
+  overallRecommendation:
+    'Continue engagement with enhanced delivery KPI monitoring and diversify for critical items.',
+};
+
+export const procurementRecommendationsResponseExample = {
+  procurementRequestId: 'clxprocurement123',
+  preferredVendors: [
+    {
+      vendorName: 'Globex Supplies Ltd',
+      reason: 'Highest evaluated bid score and verified compliance',
+      estimatedSavings: 15000,
+    },
+  ],
+  savingsOpportunities: [
+    'Consolidate laptop orders across departments for volume discount',
+    'Negotiate framework pricing for recurring purchases',
+  ],
+  alternativeSuppliers: [
+    {
+      name: 'Initech Corp',
+      category: 'IT Hardware',
+      rationale: 'Competitive pricing on equivalent specifications',
+    },
+  ],
+  procurementStrategy:
+    'Run competitive RFQ with three qualified vendors, evaluate TCO including delivery performance, and negotiate framework pricing for 12 months.',
+};
+
+export const spendAnalysisRequestExample = {
+  department: 'IT',
+};
+
+export const spendAnalysisResponseExample = {
+  topCategories: [
+    { category: 'IT Hardware', totalSpend: 250000, percentage: 35 },
+    { category: 'Professional Services', totalSpend: 180000, percentage: 25 },
+  ],
+  overspending: [
+    {
+      area: 'Software licenses',
+      amount: 45000,
+      recommendation: 'Renegotiate enterprise agreement and audit unused seats',
+    },
+  ],
+  vendorConcentration: [
+    {
+      vendor: 'Globex Supplies Ltd',
+      spendShare: 42,
+      risk: 'High concentration — consider secondary supplier',
+    },
+  ],
+  costReductionOpportunities: [
+    {
+      opportunity: 'Vendor consolidation across IT and Facilities',
+      estimatedSaving: 80000,
+      effort: 'MEDIUM',
+    },
+  ],
+};
+
+export const invoiceAnomalyResponseExample = {
+  invoiceId: 'clxinvoice123',
+  duplicateInvoices: {
+    detected: false,
+    details: 'No duplicate invoice numbers found',
+  },
+  priceAnomalies: [
+    {
+      item: 'Ergonomic Office Chair',
+      expected: 240.0,
+      actual: 250.0,
+      variance: '4.2%',
+    },
+  ],
+  quantityAnomalies: [],
+  missingApprovals: [],
+  riskScore: 25,
+  summary:
+    'Minor price variance detected on one line item. No duplicate or approval issues found.',
+};
+
+export const chatRequestExample = {
+  question: 'Which vendors have the highest delivery risk this quarter?',
+  context: 'Focus on IT hardware procurement.',
+  conversationHistory: [
+    {
+      role: 'user',
+      content: 'Show me recent purchase orders for Globex Supplies.',
+    },
+    {
+      role: 'assistant',
+      content:
+        'Globex Supplies has 3 active purchase orders totalling $72,000.',
+    },
+  ],
+};
+
+export const chatResponseExample = {
+  question: 'Which vendors have the highest delivery risk this quarter?',
+  answer:
+    'Based on recent purchase orders and goods receipts, Globex Supplies shows elevated delivery risk due to two partial deliveries in Q3. Consider diversifying suppliers for critical IT hardware items.',
+  relevantRecords: [
+    {
+      entityType: 'PURCHASE_ORDER',
+      entityId: 'clxpo123',
+      score: 0.87,
+      snippet: 'PO-2026-000003 Globex Supplies partial delivery...',
+    },
+  ],
+  provider: 'openai',
+};
+
+export const semanticSearchRequestExample = {
+  query: 'payment terms renewal clause',
+  entityTypes: ['CONTRACT', 'INVOICE'],
+  limit: 10,
+};
+
+export const semanticSearchResponseExample = {
+  results: [
+    {
+      entityType: 'CONTRACT',
+      entityId: 'clxcontract123',
+      score: 0.91,
+      snippet:
+        'CTR-2026-000001 Office Furniture Supply Agreement renewal terms...',
+    },
+  ],
+};
