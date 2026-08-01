@@ -42,7 +42,7 @@ export class OrganisationRepository {
     });
   }
 
-  create(data: Pick<Organisation, 'name'>) {
+  create(data: Pick<Organisation, 'name' | 'slug'>) {
     return this.prisma.organisation.create({
       data,
       include: organisationInclude,

@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrganisationDto } from './dto/create-organisation.dto';
 import { UpdateOrganisationDto } from './dto/update-organisation.dto';
 import { OrganisationRepository } from './organisation.repository';
+import { toOrganisationSlug } from './utils/organisation-slug.util';
 
 @Injectable()
 export class OrganisationsService {
@@ -11,7 +12,10 @@ export class OrganisationsService {
   ) {}
 
   create(dto: CreateOrganisationDto) {
-    return this.organisationRepository.create({ name: dto.name });
+    return this.organisationRepository.create({
+      name: dto.name,
+      slug: toOrganisationSlug(dto.name),
+    });
   }
 
   async findAll() {

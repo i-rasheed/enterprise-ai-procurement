@@ -61,7 +61,7 @@ export class OrganisationsController {
 
   @Patch()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.PROCUREMENT_MANAGER, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.PROCUREMENT_MANAGER)
   @ApiOperation({
     summary: 'Update current tenant organisation',
     description:
@@ -102,7 +102,7 @@ export class OrganisationsController {
 
   @Delete()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Delete current tenant organisation',
     description:
