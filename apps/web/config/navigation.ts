@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   CheckCircle2,
+  ClipboardCheck,
   FileSearch,
   FileText,
   Gavel,
@@ -65,6 +66,12 @@ export const mainNavigation: NavItem[] = [
     href: "/dashboard/purchase-orders",
     icon: Package,
     roles: ["ADMIN", "PROCUREMENT_MANAGER", "FINANCE"],
+  },
+  {
+    title: "Goods Receipts",
+    href: "/dashboard/goods-receipts",
+    icon: ClipboardCheck,
+    roles: ["ADMIN", "PROCUREMENT_MANAGER", "USER"],
   },
   {
     title: "Invoices",
