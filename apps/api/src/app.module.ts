@@ -17,6 +17,7 @@ import { RFQsModule } from './rfqs/rfqs.module';
 import { BidsModule } from './bids/bids.module';
 import { BidEvaluationsModule } from './bid-evaluations/bid-evaluations.module';
 import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
     BidsModule,
     BidEvaluationsModule,
     PurchaseOrdersModule,
+    GoodsReceiptsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

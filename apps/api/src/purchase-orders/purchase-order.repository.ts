@@ -174,6 +174,13 @@ export class PurchaseOrderRepository {
     });
   }
 
+  updateStatus(id: string, status: PurchaseOrderStatus) {
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
   paginate(
     organisationId: string,
     filters: PurchaseOrderFilterInput,

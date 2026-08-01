@@ -677,3 +677,90 @@ export const cancelPurchaseOrderResponseExample = {
     status: 'CANCELLED',
   },
 };
+
+export const createGoodsReceiptRequestExample = {
+  purchaseOrderId: 'clxpo123',
+  receiptDate: '2026-09-15T10:00:00.000Z',
+  warehouse: 'Central Warehouse - Block A',
+  notes: 'Initial delivery for office furniture order.',
+};
+
+export const updateGoodsReceiptRequestExample = {
+  receiptDate: '2026-09-16T10:00:00.000Z',
+  warehouse: 'Central Warehouse - Block B',
+  notes: 'Updated receipt notes.',
+};
+
+export const goodsReceiptItemResponseExample = {
+  id: 'clxgrnitem123',
+  purchaseOrderItemId: 'clxpoitem123',
+  quantityOrdered: 10,
+  quantityReceived: 5,
+  quantityRejected: 0,
+  remarks: null,
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const goodsReceiptResponseExample = {
+  id: 'clxgrn123',
+  receiptNumber: 'GRN-2026-000001',
+  purchaseOrderId: 'clxpo123',
+  organisationId: 'clxorg123',
+  receivedBy: {
+    id: 'clx123abc456def',
+    email: 'warehouse@acme.com',
+    firstName: 'Sam',
+    lastName: 'Receiver',
+    role: Role.USER,
+  },
+  receiptDate: '2026-09-15T10:00:00.000Z',
+  warehouse: 'Central Warehouse - Block A',
+  notes: 'Initial delivery for office furniture order.',
+  status: 'DRAFT',
+  items: [goodsReceiptItemResponseExample],
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const paginatedGoodsReceiptResponseExample = {
+  goodsReceipts: [goodsReceiptResponseExample],
+  page: 1,
+  limit: 20,
+  total: 1,
+  totalPages: 1,
+};
+
+export const receiveGoodsRequestExample = {
+  items: [
+    {
+      goodsReceiptItemId: 'clxgrnitem123',
+      quantityReceived: 5,
+    },
+  ],
+};
+
+export const rejectGoodsRequestExample = {
+  items: [
+    {
+      goodsReceiptItemId: 'clxgrnitem123',
+      quantityRejected: 2,
+      remarks: 'Items damaged during transit. Packaging was compromised.',
+    },
+  ],
+};
+
+export const deleteGoodsReceiptResponseExample = {
+  message: 'Goods receipt deleted successfully',
+};
+
+export const completeGoodsReceiptResponseExample = {
+  ...goodsReceiptResponseExample,
+  status: 'COMPLETED',
+  items: [
+    {
+      ...goodsReceiptItemResponseExample,
+      quantityReceived: 10,
+    },
+  ],
+};
