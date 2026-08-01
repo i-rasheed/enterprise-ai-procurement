@@ -214,3 +214,83 @@ export const paginatedVendorResponseExample = {
 export const deleteVendorResponseExample = {
   message: 'Vendor deleted successfully',
 };
+
+export const createProcurementRequestExample = {
+  title: 'Office furniture refresh Q3',
+  description: 'Replace aging chairs and desks across the Lagos office.',
+  justification:
+    'Current furniture is beyond repair and affecting staff productivity.',
+  department: 'Operations',
+  estimatedBudget: 2500.0,
+  currency: 'USD',
+  priority: 'MEDIUM',
+  requiredDeliveryDate: '2026-10-31T00:00:00.000Z',
+};
+
+export const updateProcurementRequestExample = {
+  priority: 'HIGH',
+  estimatedBudget: 2500.0,
+};
+
+export const createProcurementItemRequestExample = {
+  description: 'Ergonomic office chairs',
+  quantity: 10,
+  unitPrice: 250.0,
+};
+
+export const submitProcurementRequestExample = {
+  submissionNote: 'Ready for procurement review.',
+};
+
+export const procurementRequesterExample = {
+  id: 'clx123abc456def',
+  email: 'admin@acme.com',
+  firstName: 'Jane',
+  lastName: 'Doe',
+};
+
+export const procurementItemResponseExample = {
+  id: 'clxitem123',
+  description: 'Ergonomic office chairs',
+  quantity: 10,
+  unitPrice: 250.0,
+  totalPrice: 2500.0,
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const procurementRequestResponseExample = {
+  id: 'clxprocurement123',
+  organisationId: 'clx789ghi012jkl',
+  requester: procurementRequesterExample,
+  title: 'Office furniture refresh Q3',
+  description: 'Replace aging chairs and desks across the Lagos office.',
+  justification:
+    'Current furniture is beyond repair and affecting staff productivity.',
+  department: 'Operations',
+  estimatedBudget: 2500.0,
+  currency: 'USD',
+  priority: 'MEDIUM',
+  status: 'DRAFT',
+  requiredDeliveryDate: '2026-10-31T00:00:00.000Z',
+  items: [procurementItemResponseExample],
+  totalCost: 2500.0,
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const paginatedProcurementResponseExample = {
+  requests: [procurementRequestResponseExample],
+  page: 1,
+  limit: 20,
+  total: 1,
+  totalPages: 1,
+};
+
+export const deleteProcurementResponseExample = {
+  message: 'Procurement request deleted successfully',
+};
+
+export const deleteProcurementItemResponseExample = {
+  message: 'Line item removed successfully',
+};

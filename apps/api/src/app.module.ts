@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { OrganisationsModule } from './organisations/organisations.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { VendorsModule } from './vendors/vendors.module';
+import { ProcurementModule } from './procurement/procurement.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { VendorsModule } from './vendors/vendors.module';
     OrganisationsModule,
     InvitationsModule,
     VendorsModule,
+    ProcurementModule,
   ],
   controllers: [AppController],
   providers: [AppService],
