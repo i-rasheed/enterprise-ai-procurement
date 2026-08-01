@@ -412,3 +412,105 @@ export const rfqVendorListResponseExample = {
 export const deleteRfqResponseExample = {
   message: 'RFQ deleted successfully',
 };
+
+export const createBidRequestExample = {
+  rfqId: 'clxrfq123',
+  vendorId: 'clxvendor123',
+  currency: 'USD',
+  deliveryPeriod: '30 days from purchase order',
+  paymentTerms: 'Net 30',
+  warrantyPeriod: '12 months',
+  notes: 'Includes delivery and installation.',
+};
+
+export const updateBidRequestExample = {
+  paymentTerms: 'Net 45',
+  deliveryPeriod: '45 days from purchase order',
+};
+
+export const submitBidRequestExample = {
+  submissionNote: 'Final quotation submitted for review.',
+};
+
+export const createBidItemRequestExample = {
+  description: 'Ergonomic office chair model X200',
+  quantity: 10,
+  unitPrice: 240.0,
+};
+
+export const uploadBidAttachmentRequestExample = {
+  fileName: 'quotation.pdf',
+  fileUrl: 'https://storage.example.com/bids/quotation.pdf',
+  fileType: 'application/pdf',
+};
+
+export const bidSubmitterExample = {
+  id: 'clxvendoruser123',
+  email: 'vendor@globex.com',
+  firstName: 'Alex',
+  lastName: 'Supplier',
+  role: Role.USER,
+};
+
+export const bidItemResponseExample = {
+  id: 'clxbiditem123',
+  description: 'Ergonomic office chair model X200',
+  quantity: 10,
+  unitPrice: 240.0,
+  totalPrice: 2400.0,
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const bidAttachmentResponseExample = {
+  id: 'clxattachment123',
+  fileName: 'quotation.pdf',
+  fileUrl: 'https://storage.example.com/bids/quotation.pdf',
+  fileType: 'application/pdf',
+  uploadedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const bidResponseExample = {
+  id: 'clxbid123',
+  rfqId: 'clxrfq123',
+  rfq: {
+    id: 'clxrfq123',
+    rfqNumber: 'RFQ-2026-000001',
+    title: 'Office Furniture RFQ Q3',
+  },
+  vendor: {
+    id: 'clxvendor123',
+    name: 'Globex Supplies Ltd',
+    email: 'vendor@globex.com',
+  },
+  submittedBy: bidSubmitterExample,
+  bidNumber: 'BID-2026-000001',
+  totalAmount: 2400.0,
+  currency: 'USD',
+  deliveryPeriod: '30 days from purchase order',
+  paymentTerms: 'Net 30',
+  warrantyPeriod: '12 months',
+  notes: 'Includes delivery and installation.',
+  status: 'DRAFT',
+  submittedAt: null,
+  items: [bidItemResponseExample],
+  attachments: [bidAttachmentResponseExample],
+  createdAt: '2026-08-01T10:00:00.000Z',
+  updatedAt: '2026-08-01T10:00:00.000Z',
+};
+
+export const paginatedBidResponseExample = {
+  bids: [bidResponseExample],
+  page: 1,
+  limit: 20,
+  total: 1,
+  totalPages: 1,
+};
+
+export const deleteBidResponseExample = {
+  message: 'Bid deleted successfully',
+};
+
+export const deleteBidItemResponseExample = {
+  message: 'Bid item removed successfully',
+};
