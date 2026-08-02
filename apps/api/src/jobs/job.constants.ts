@@ -9,7 +9,10 @@ export const QUEUE_NAMES = {
 export type EmailJobData = {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
+  text?: string;
+  templateKey?: string;
+  variables?: Record<string, string>;
 };
 
 export type NotificationJobData = {

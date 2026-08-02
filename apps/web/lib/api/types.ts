@@ -34,6 +34,7 @@ export type SafeUser = {
   lastName: string;
   role: Role;
   isVerified: boolean;
+  isPlatformAdmin?: boolean;
   organisationId: string | null;
   createdAt: string;
   updatedAt: string;

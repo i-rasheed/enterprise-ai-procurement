@@ -1,5 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { UsageMetric } from '@prisma/client';
 
+import { UsageService } from '../billing/usage.service';
 import { AiRepository } from './ai.repository';
 import { AiFeature, LLM_PROVIDER } from './constants/ai.constants';
 import type {
@@ -18,6 +20,7 @@ export class AiService {
   constructor(
     @Inject(LLM_PROVIDER) private readonly llmProvider: LLMProvider,
     private readonly aiRepository: AiRepository,
+    private readonly usageService: UsageService,
   ) {}
 
   async generate(
@@ -90,6 +93,11 @@ export class AiService {
       totalTokens: response.totalTokens,
       executionTimeMs,
     });
+
+    await this.usageService.incrementUsage(
+      ctx.organisationId,
+      UsageMetric.AI_REQUESTS,
+    );
   }
 
   private parseJsonResponse(content: string): Record<string, unknown> {

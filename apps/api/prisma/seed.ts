@@ -154,6 +154,89 @@ async function main() {
     procurement: procurement.title,
     contract: contract.contractNumber,
   });
+
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+  await prisma.organisation.update({
+    where: { id: organisation.id },
+    data: {
+      plan: 'PROFESSIONAL',
+      billingStatus: 'TRIALING',
+      trialEndsAt,
+      billingEmail: 'admin@demo.com',
+    },
+  });
+
+  await prisma.user.update({
+    where: { id: users[0].id },
+    data: { isPlatformAdmin: true, isVerified: true },
+  });
+
+  await prisma.emailTemplate.createMany({
+    skipDuplicates: true,
+    data: [
+      {
+        key: 'welcome',
+        subject: 'Welcome to {{appName}}',
+        htmlBody: '<p>Hi {{firstName}}, welcome to {{appName}}.</p>',
+        textBody: 'Hi {{firstName}}, welcome to {{appName}}.',
+      },
+      {
+        key: 'email_verification',
+        subject: 'Verify your email',
+        htmlBody: '<p>Verify your account: <a href="{{verifyUrl}}">Verify email</a></p>',
+        textBody: 'Verify your account: {{verifyUrl}}',
+      },
+      {
+        key: 'password_reset',
+        subject: 'Reset your password',
+        htmlBody: '<p>Reset password: <a href="{{resetUrl}}">Reset</a></p>',
+        textBody: 'Reset password: {{resetUrl}}',
+      },
+      {
+        key: 'invitation',
+        subject: 'You are invited to {{organisationName}}',
+        htmlBody: '<p>Join {{organisationName}}: <a href="{{inviteUrl}}">Accept invitation</a></p>',
+        textBody: 'Join {{organisationName}}: {{inviteUrl}}',
+      },
+    ],
+  });
+
+  await prisma.systemSetting.createMany({
+    skipDuplicates: true,
+    data: [
+      { key: 'maintenance_mode', value: { enabled: false } },
+      { key: 'support_email', value: { address: 'support@procureai.app' } },
+      { key: 'default_trial_days', value: { days: 14 } },
+    ],
+  });
+
+  await prisma.blogPost.createMany({
+    skipDuplicates: true,
+    data: [
+      {
+        slug: 'launch-multi-tenant-saas',
+        title: 'Launching ProcureAI as a multi-tenant SaaS',
+        excerpt: 'How we added Stripe billing, usage limits, and tenant isolation.',
+        content:
+          'ProcureAI now ships with subscription plans, Stripe checkout, feature flags, and a customer portal designed for enterprise procurement teams.',
+        authorName: 'ProcureAI Team',
+        published: true,
+        publishedAt: new Date(),
+      },
+      {
+        slug: 'aws-production-deployment',
+        title: 'Deploying ProcureAI on AWS',
+        excerpt: 'Reference architecture for ECS, RDS, Redis, and backups.',
+        content:
+          'Use the included Terraform modules and production runbooks to deploy API, web, and docs services with monitoring and automated backups.',
+        authorName: 'ProcureAI Team',
+        published: true,
+        publishedAt: new Date(),
+      },
+    ],
+  });
 }
 
 main()

@@ -2,6 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 
+import { MailerService } from '../email/email.service';
 import {
   AiJobData,
   EmailJobData,
@@ -15,10 +16,28 @@ import {
 export class EmailProcessor extends WorkerHost {
   private readonly logger = new Logger(EmailProcessor.name);
 
-  process(job: Job<EmailJobData>): Promise<void> {
+  constructor(private readonly mailerService: MailerService) {
+    super();
+  }
+
+  async process(job: Job<EmailJobData>): Promise<void> {
     this.logger.log(`Processing email job ${job.id} to ${job.data.to}`);
-    this.logger.log(`Email queued: ${job.data.subject}`);
-    return Promise.resolve();
+
+    if (job.data.templateKey) {
+      await this.mailerService.sendTemplate(
+        job.data.to,
+        job.data.templateKey,
+        job.data.variables ?? {},
+      );
+      return;
+    }
+
+    await this.mailerService.sendRaw(
+      job.data.to,
+      job.data.subject,
+      job.data.html ?? job.data.subject,
+      job.data.text,
+    );
   }
 }
 

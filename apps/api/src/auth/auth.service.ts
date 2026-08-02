@@ -17,6 +17,7 @@ import { AuditService } from '../audit/audit.service';
 import { assertPasswordPolicy } from '../common/pipes/sanitize-input.pipe';
 import { toSafeUser } from '../common/utils/user.util';
 import { PrismaService } from '../database/prisma.service';
+import { TRIAL_DAYS } from '../billing/constants/plan.constants';
 import { toOrganisationSlug } from '../organisations/utils/organisation-slug.util';
 import { JobService } from '../jobs/job.service';
 import { UsersService } from '../users/users.service';
@@ -62,11 +63,16 @@ export class AuthService {
 
     const passwordHash = await argon2.hash(dto.password);
 
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + TRIAL_DAYS);
+
     const result = await this.prisma.$transaction(async (tx) => {
       const organisation = await tx.organisation.create({
         data: {
           name: dto.organisationName,
           slug,
+          trialEndsAt,
+          billingEmail: dto.email,
         },
       });
 

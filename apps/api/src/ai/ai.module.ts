@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { UsageMetric } from '@prisma/client';
 
 import { AuthModule } from '../auth/auth.module';
+import { BillingModule } from '../billing/billing.module';
 import { DatabaseModule } from '../database/database.module';
+import { FeatureFlagsModule } from '../feature-flags/feature-flags.module';
 import { AiController } from './ai.controller';
 import { AiDataContextService } from './ai-data-context.service';
 import { AiRepository } from './ai.repository';
@@ -22,7 +25,13 @@ import { ContractSummaryService } from './summaries/contract-summary.service';
 import { VectorSearchService } from './vector-search/vector-search.service';
 
 @Module({
-  imports: [ConfigModule.forFeature(aiConfig), DatabaseModule, AuthModule],
+  imports: [
+    ConfigModule.forFeature(aiConfig),
+    DatabaseModule,
+    AuthModule,
+    BillingModule,
+    FeatureFlagsModule,
+  ],
   controllers: [AiController],
   providers: [
     AiRepository,
