@@ -149,13 +149,13 @@ export type PurchaseOrder = {
   deliveryAddress?: string | null;
   notes?: string | null;
   status: PurchaseOrderStatus;
-  items: Array<{
+  items: {
     id: string;
     description: string;
     quantity: number;
     unitPrice: number;
     totalPrice: number;
-  }>;
+  }[];
   issueDate?: string | null;
   createdAt: string;
 };
@@ -186,13 +186,13 @@ export type Invoice = {
   currency: string;
   status: InvoiceStatus;
   notes?: string | null;
-  items: Array<{
+  items: {
     id: string;
     description: string;
     quantity: number;
     unitPrice: number;
     totalPrice: number;
-  }>;
+  }[];
   createdAt: string;
 };
 
@@ -226,11 +226,11 @@ export type Contract = {
   status: ContractStatus;
   signedByOrganisation?: string | null;
   signedByVendor?: string | null;
-  documents: Array<{
+  documents: {
     id: string;
     fileName: string;
     fileUrl: string;
-  }>;
+  }[];
   createdAt: string;
 };
 
@@ -264,7 +264,7 @@ export type RFQ = {
   description: string;
   status: string;
   closingDate: string;
-  vendors?: Array<{ vendor: { id: string; name: string } }>;
+  vendors?: { vendor: { id: string; name: string } }[];
 };
 
 export type PaginatedRfqs = {
@@ -280,21 +280,21 @@ export type ChatRole = "user" | "assistant";
 export type ChatRequest = {
   question: string;
   context?: string;
-  conversationHistory?: Array<{
+  conversationHistory?: {
     role: ChatRole;
     content: string;
-  }>;
+  }[];
 };
 
 export type ChatResponse = {
   question: string;
   answer: string;
-  relevantRecords: Array<{
+  relevantRecords: {
     entityType: string;
     entityId: string;
     score: number;
     snippet: string;
-  }>;
+  }[];
   provider: string;
 };
 

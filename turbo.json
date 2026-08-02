@@ -23,7 +23,9 @@
         "SENTRY_ORG",
         "SENTRY_PROJECT",
         "SENTRY_AUTH_TOKEN",
-        "PLAYWRIGHT_BASE_URL"
+        "PLAYWRIGHT_BASE_URL",
+        "EXPO_PUBLIC_API_URL",
+        "EXPO_PUBLIC_APP_NAME"
       ]
     },
     "test": {

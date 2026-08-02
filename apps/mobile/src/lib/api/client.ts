@@ -1,8 +1,4 @@
-import axios, {
-  type AxiosError,
-  type AxiosInstance,
-  type InternalAxiosRequestConfig,
-} from "axios";
+import { create as createAxios, type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
 import { env } from "@/lib/env";
 import {
@@ -63,7 +59,7 @@ async function refreshAccessToken(client: AxiosInstance): Promise<string | null>
 }
 
 function createApiClient(): AxiosInstance {
-  const client = axios.create({
+  const client = createAxios({
     baseURL: env.apiUrl,
     headers: {
       "Content-Type": "application/json",

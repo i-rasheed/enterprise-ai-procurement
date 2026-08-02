@@ -12,13 +12,13 @@ import type {
 } from "@/lib/api/types";
 
 type VendorBidsResponse = {
-  bids: Array<{
+  bids: {
     id: string;
     bidNumber: string;
     status: string;
     totalAmount: number;
     rfq: { id: string; title: string; rfqNumber: string };
-  }>;
+  }[];
 };
 
 export const vendorPortalRepository = {
