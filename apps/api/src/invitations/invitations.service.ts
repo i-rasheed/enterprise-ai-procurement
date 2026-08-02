@@ -5,10 +5,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Invitation, InvitationStatus } from '@prisma/client';
+import { Invitation, InvitationStatus, UsageMetric } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 import { JwtPayload } from '../common/types/jwt-payload.interface';
+import { UsageService } from '../billing/usage.service';
 import { OrganisationRepository } from '../organisations/organisation.repository';
 import { UsersService } from '../users/users.service';
 import { createTokenId, hashToken } from '../auth/utils/token.util';
@@ -24,6 +25,7 @@ export class InvitationsService {
     private readonly invitationRepository: InvitationRepository,
     private readonly organisationRepository: OrganisationRepository,
     private readonly usersService: UsersService,
+    private readonly usageService: UsageService,
   ) {}
 
   async inviteUser(
@@ -64,6 +66,11 @@ export class InvitationsService {
         );
       }
     }
+
+    await this.usageService.assertWithinLimit(
+      organisationId,
+      UsageMetric.USERS,
+    );
 
     const plainToken = createTokenId();
     const tokenHash = hashToken(plainToken);

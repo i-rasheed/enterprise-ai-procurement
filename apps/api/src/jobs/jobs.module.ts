@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+import { EmailModule } from '../email/email.module';
 import { QUEUE_NAMES } from './job.constants';
 import {
   AiProcessor,
@@ -15,6 +16,7 @@ import { JobService } from './job.service';
 @Module({
   imports: [
     ConfigModule,
+    EmailModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

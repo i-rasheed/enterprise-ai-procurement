@@ -17,6 +17,7 @@ model User {
   firstName      String
   lastName       String
   role           Role           @default(USER)
+  isPlatformAdmin Boolean       @default(false)
   isVerified     Boolean        @default(false)
   failedLoginAttempts Int       @default(0)
   lockedUntil    DateTime?
@@ -63,6 +64,16 @@ model Organisation {
   id          String       @id @default(cuid())
   name        String
   slug        String       @unique
+  plan        SubscriptionPlan @default(FREE)
+  billingStatus BillingStatus @default(TRIALING)
+  stripeCustomerId String?  @unique
+  stripeSubscriptionId String? @unique
+  trialEndsAt DateTime?
+  billingEmail String?
+  settings    Json         @default("{}")
+  onboardingStep Int       @default(0)
+  onboardingCompletedAt DateTime?
+  featureOverrides Json    @default("{}")
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -79,6 +90,138 @@ model Organisation {
   embeddingRecords    EmbeddingRecord[]
   auditLogs           AuditLog[]
   notifications       Notification[]
+  subscription        Subscription?
+  usageSnapshots      UsageSnapshot[]
+  supportTickets      SupportTicket[]
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum BillingStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+model Subscription {
+  id                   String           @id @default(cuid())
+  organisationId       String           @unique
+  organisation         Organisation     @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan
+  stripePriceId        String?
+  stripeSubscriptionId String?          @unique
+  status               BillingStatus    @default(TRIALING)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([status])
+}
+
+model UsageSnapshot {
+  id             String       @id @default(cuid())
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  metric         UsageMetric
+  value          Int          @default(0)
+  periodStart    DateTime
+  periodEnd      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organisationId, metric, periodStart])
+  @@index([organisationId])
+}
+
+enum UsageMetric {
+  USERS
+  PROCUREMENT_REQUESTS
+  AI_REQUESTS
+  STORAGE_MB
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model SupportTicket {
+  id             String              @id @default(cuid())
+  organisationId String
+  organisation   Organisation        @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  userId         String
+  subject        String
+  status         SupportTicketStatus @default(OPEN)
+  priority       SupportPriority     @default(NORMAL)
+  messages       SupportMessage[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([organisationId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SupportPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model SupportMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    String?
+  isStaff   Boolean       @default(false)
+  body      String
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId])
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  content     String
+  coverImage  String?
+  authorName  String
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([published, publishedAt])
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  subject   String
+  htmlBody  String
+  textBody  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum ProcurementPriority {

@@ -22,6 +22,11 @@ export const siteConfig = {
 } as const;
 
 export const publicRoutes = [
+  "/",
+  "/pricing",
+  "/features",
+  "/blog",
+  "/contact",
   "/login",
   "/register",
   "/forgot-password",

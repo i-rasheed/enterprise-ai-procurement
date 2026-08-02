@@ -24,6 +24,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { RequiresFeature } from '../feature-flags/decorators/requires-feature.decorator';
+import { FeatureFlagGuard } from '../feature-flags/feature-flag.guard';
 import {
   chatRequestExample,
   chatResponseExample,
@@ -62,8 +64,9 @@ import { VectorSearchService } from './vector-search/vector-search.service';
 @ApiTags('ai')
 @ApiBearerAuth('JWT-auth')
 @Controller('ai')
-@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard, ThrottlerGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard, FeatureFlagGuard, ThrottlerGuard)
 @Roles(...AI_ACCESS_ROLES)
+@RequiresFeature('ai_assistant')
 @Throttle({ default: { limit: 30, ttl: 60_000 } })
 export class AiController {
   constructor(

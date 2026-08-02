@@ -8,8 +8,10 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiNotFoundResponse,
@@ -26,6 +28,8 @@ import {
   organisationResponseExample,
   updateOrganisationRequestExample,
 } from '../common/swagger/swagger-examples';
+import { JwtAuthGuard } from '../auth/guards/jwt/jwt.guard';
+import { PlatformAdminGuard } from '../platform/guards/platform-admin.guard';
 import { CreateOrganisationDto } from './dto/create-organisation.dto';
 import {
   OrganisationListResponseDto,
@@ -37,6 +41,8 @@ import { OrganisationsService } from './organisations.service';
 
 @ApiTags('organisations')
 @Controller('organisations')
+@UseGuards(JwtAuthGuard, PlatformAdminGuard)
+@ApiBearerAuth('JWT-auth')
 export class OrganisationsCrudController {
   constructor(private readonly organisationsService: OrganisationsService) {}
 

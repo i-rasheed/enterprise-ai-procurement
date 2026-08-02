@@ -12,7 +12,10 @@ import { initTelemetry } from './instrumentation';
 async function bootstrap() {
   initTelemetry();
 
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    rawBody: true,
+  });
   app.useLogger(app.get(Logger));
 
   const configService = app.get(ConfigService);
