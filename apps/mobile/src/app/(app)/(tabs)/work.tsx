@@ -1,9 +1,8 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View , Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
-import { Text, Pressable } from "react-native";
 import { useAppTheme } from "@/providers/theme-provider";
 import { spacing, typography } from "@/theme";
 

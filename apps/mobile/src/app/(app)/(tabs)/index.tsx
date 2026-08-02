@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View , Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,6 @@ import { useExecutiveDashboard } from "@/features/dashboard/hooks/use-dashboard"
 import { useAuthStore } from "@/stores/auth-store";
 import { spacing, typography } from "@/theme";
 import { useAppTheme } from "@/providers/theme-provider";
-import { Text, Pressable } from "react-native";
 import { ErrorState } from "@/components/ui/error-state";
 import { formatCurrency } from "@/components/ui/section-header";
 

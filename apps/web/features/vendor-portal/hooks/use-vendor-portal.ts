@@ -173,6 +173,11 @@ export function useAcknowledgePurchaseOrder(vendorId?: string) {
     mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
       vendorPortalRepository.acknowledgePurchaseOrder(id, notes),
     onSuccess: () => {
+      if (vendorId) {
+        queryClient.invalidateQueries({
+          queryKey: vendorPortalQueryKeys.purchaseOrders(vendorId),
+        });
+      }
       queryClient.invalidateQueries({ queryKey: vendorPortalQueryKeys.all });
       toast.success("Purchase order acknowledged");
     },
