@@ -1,5 +1,3 @@
-import type { Vendor } from "@/features/vendors/types";
-
 export type VendorPortalStats = {
   openRfqs: number;
   activeBids: number;

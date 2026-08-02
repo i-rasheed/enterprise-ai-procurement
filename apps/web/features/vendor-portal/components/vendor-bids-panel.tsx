@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,

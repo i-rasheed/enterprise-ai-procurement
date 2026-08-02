@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPost } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { assistantRepository } from "@/features/assistant/api/assistant.repository";
 import type { ChatRequest } from "@/features/assistant/types";
 import type { Bid } from "@/features/bids/types";
@@ -8,7 +8,6 @@ import type {
   PaginatedInvoices,
 } from "@/features/invoices/types";
 import type {
-  PaginatedPurchaseOrders,
   PurchaseOrder,
 } from "@/features/purchase-orders/types";
 import type { PaginatedRfqs, RFQ } from "@/features/rfqs/types";
