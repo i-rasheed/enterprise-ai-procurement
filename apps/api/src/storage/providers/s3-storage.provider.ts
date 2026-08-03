@@ -19,11 +19,8 @@ export class S3StorageProvider implements StorageProvider {
   private client: S3Client | null = null;
   private bucket: string;
 
-  constructor(
-    private readonly configService: ConfigService,
-    providerName: string,
-  ) {
-    this.name = providerName;
+  constructor(private readonly configService: ConfigService) {
+    this.name = this.configService.get<string>('STORAGE_PROVIDER', 's3');
     this.bucket = this.configService.get<string>('AWS_S3_BUCKET', '');
   }
 

@@ -105,7 +105,7 @@ export const useAuthStore = create<AuthState>()(
       setHydrated: (value) => set({ isHydrated: value }),
     }),
     {
-      name: "procureai-auth",
+      name: "spendwise-auth",
       partialize: (state) => ({
         user: state.user,
         organisation: state.organisation,

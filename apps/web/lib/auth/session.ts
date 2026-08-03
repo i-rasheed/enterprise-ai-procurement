@@ -1,7 +1,7 @@
-export const SESSION_COOKIE = "procureai_session";
-export const REMEMBER_ME_KEY = "procureai_remember_me";
-export const ACCESS_TOKEN_KEY = "procureai_access_token";
-export const REFRESH_TOKEN_KEY = "procureai_refresh_token";
+export const SESSION_COOKIE = "spendwise_session";
+export const REMEMBER_ME_KEY = "spendwise_remember_me";
+export const ACCESS_TOKEN_KEY = "spendwise_access_token";
+export const REFRESH_TOKEN_KEY = "spendwise_refresh_token";
 
 export type TokenStorage = Storage;
 

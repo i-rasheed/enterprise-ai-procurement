@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 
-const ACCESS_TOKEN_KEY = "procureai.accessToken";
-const REFRESH_TOKEN_KEY = "procureai.refreshToken";
+const ACCESS_TOKEN_KEY = "spendwise.accessToken";
+const REFRESH_TOKEN_KEY = "spendwise.refreshToken";
 
 export async function getStoredAccessToken(): Promise<string | null> {
   return SecureStore.getItemAsync(ACCESS_TOKEN_KEY);

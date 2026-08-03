@@ -110,28 +110,39 @@ async function main() {
     },
   });
 
-  const procurement = await prisma.procurementRequest.create({
-    data: {
+  let procurement = await prisma.procurementRequest.findFirst({
+    where: {
       organisationId: organisation.id,
-      requesterId: users[3]!.id,
       title: 'Demo Office Equipment',
-      description: 'Seed procurement request for demo laptops and monitors',
-      justification: 'Replace aging equipment',
-      department: 'IT',
-      estimatedBudget: 50000,
-      status: ProcurementStatus.APPROVED,
-      requiredDeliveryDate: new Date('2026-12-31'),
-      items: {
-        create: [
-          { description: 'Laptop', quantity: 10, unitPrice: 1200, totalPrice: 12000 },
-          { description: 'Monitor', quantity: 10, unitPrice: 350, totalPrice: 3500 },
-        ],
-      },
     },
   });
 
-  const contract = await prisma.contract.create({
-    data: {
+  if (!procurement) {
+    procurement = await prisma.procurementRequest.create({
+      data: {
+        organisationId: organisation.id,
+        requesterId: users[3]!.id,
+        title: 'Demo Office Equipment',
+        description: 'Seed procurement request for demo laptops and monitors',
+        justification: 'Replace aging equipment',
+        department: 'IT',
+        estimatedBudget: 50000,
+        status: ProcurementStatus.APPROVED,
+        requiredDeliveryDate: new Date('2026-12-31'),
+        items: {
+          create: [
+            { description: 'Laptop', quantity: 10, unitPrice: 1200, totalPrice: 12000 },
+            { description: 'Monitor', quantity: 10, unitPrice: 350, totalPrice: 3500 },
+          ],
+        },
+      },
+    });
+  }
+
+  const contract = await prisma.contract.upsert({
+    where: { contractNumber: 'CTR-DEMO-000001' },
+    update: {},
+    create: {
       contractNumber: 'CTR-DEMO-000001',
       organisationId: organisation.id,
       vendorId: vendor.id,
@@ -207,7 +218,7 @@ async function main() {
     skipDuplicates: true,
     data: [
       { key: 'maintenance_mode', value: { enabled: false } },
-      { key: 'support_email', value: { address: 'support@procureai.app' } },
+      { key: 'support_email', value: { address: 'support@spendwise.app' } },
       { key: 'default_trial_days', value: { days: 14 } },
     ],
   });
@@ -217,21 +228,21 @@ async function main() {
     data: [
       {
         slug: 'launch-multi-tenant-saas',
-        title: 'Launching ProcureAI as a multi-tenant SaaS',
-        excerpt: 'How we added Stripe billing, usage limits, and tenant isolation.',
+        title: 'Launching SpendWise as a multi-tenant SaaS',
+        excerpt: 'How we added Paystack billing, usage limits, and tenant isolation.',
         content:
-          'ProcureAI now ships with subscription plans, Stripe checkout, feature flags, and a customer portal designed for enterprise procurement teams.',
-        authorName: 'ProcureAI Team',
+          'SpendWise now ships with subscription plans, Paystack checkout, feature flags, and billing management designed for enterprise procurement teams.',
+        authorName: 'SpendWise Team',
         published: true,
         publishedAt: new Date(),
       },
       {
         slug: 'aws-production-deployment',
-        title: 'Deploying ProcureAI on AWS',
+        title: 'Deploying SpendWise on AWS',
         excerpt: 'Reference architecture for ECS, RDS, Redis, and backups.',
         content:
           'Use the included Terraform modules and production runbooks to deploy API, web, and docs services with monitoring and automated backups.',
-        authorName: 'ProcureAI Team',
+        authorName: 'SpendWise Team',
         published: true,
         publishedAt: new Date(),
       },

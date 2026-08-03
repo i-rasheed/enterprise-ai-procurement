@@ -31,7 +31,7 @@ export default function LandingPage() {
             Enterprise procurement, delivered as a subscription
           </h1>
           <p className="text-muted-foreground mt-4 text-lg">
-            Launch faster with Stripe billing, usage limits, feature flags, onboarding,
+            Launch faster with Paystack billing, usage limits, feature flags, onboarding,
             and a customer portal built for B2B SaaS.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -57,21 +57,6 @@ export default function LandingPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-16 md:px-6">
-        <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-          <div>
-            <h2 className="text-2xl font-semibold">Ready for production on AWS</h2>
-            <p className="text-muted-foreground mt-2 max-w-xl text-sm">
-              Docker images, CI/CD, monitoring hooks, backup guidance, and deployment
-              documentation included.
-            </p>
-          </div>
-          <Button asChild>
-            <Link href="/contact">Talk to sales</Link>
-          </Button>
         </div>
       </section>
     </>

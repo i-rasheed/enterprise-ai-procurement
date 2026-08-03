@@ -6,20 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const plans = [
   {
     name: "Free",
-    price: "$0",
+    price: "₦0",
     description: "Evaluate core procurement workflows.",
     features: ["3 users", "25 requests", "50 AI requests", "Approvals & vendors"],
   },
   {
     name: "Starter",
-    price: "$49",
+    price: "₦75,000",
     description: "Growing teams with sourcing needs.",
     features: ["10 users", "RFQs & bids", "Purchase orders", "200 requests"],
     highlighted: true,
   },
   {
     name: "Professional",
-    price: "$149",
+    price: "₦225,000",
     description: "Full procure-to-pay plus AI.",
     features: ["50 users", "Analytics", "AI assistant", "Vendor portal"],
   },

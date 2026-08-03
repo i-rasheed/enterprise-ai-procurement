@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/page-header";
+import { UserGuideDownloadCard } from "@/components/shared/user-guide-download-card";
 import { saasRepository } from "@/features/saas/api/saas.repository";
 
 export function OnboardingWizardPanel() {
@@ -37,6 +38,8 @@ export function OnboardingWizardPanel() {
         title="Onboarding"
         description="Complete setup steps to get your organisation production-ready."
       />
+
+      <UserGuideDownloadCard />
 
       <Card>
         <CardHeader>

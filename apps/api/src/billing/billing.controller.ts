@@ -51,7 +51,7 @@ export class BillingController {
   @Post('checkout')
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create Stripe checkout session' })
+  @ApiOperation({ summary: 'Initialize Paystack checkout' })
   createCheckout(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateCheckoutDto,
@@ -63,12 +63,12 @@ export class BillingController {
     );
   }
 
-  @Post('portal')
+  @Post('cancel')
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create Stripe customer portal session' })
-  createPortal(@CurrentUser() user: JwtPayload) {
-    return this.billingService.createPortalSession(user.organisationId!);
+  @ApiOperation({ summary: 'Cancel Paystack subscription' })
+  cancelSubscription(@CurrentUser() user: JwtPayload) {
+    return this.billingService.cancelSubscription(user.organisationId!);
   }
 }
 
@@ -77,12 +77,12 @@ export class BillingController {
 export class BillingWebhookController {
   constructor(private readonly billingService: BillingService) {}
 
-  @Post('stripe')
+  @Post('paystack')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Stripe webhook handler' })
-  handleStripe(
+  @ApiOperation({ summary: 'Paystack webhook handler' })
+  handlePaystack(
     @Req() req: Request & { rawBody?: Buffer },
-    @Headers('stripe-signature') signature: string,
+    @Headers('x-paystack-signature') signature: string,
   ) {
     const rawBody = req.rawBody ?? Buffer.from(JSON.stringify(req.body));
     return this.billingService.handleWebhook(rawBody, signature);

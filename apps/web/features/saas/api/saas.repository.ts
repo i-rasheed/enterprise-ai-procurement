@@ -12,8 +12,8 @@ export const saasRepository = {
       .post("/billing/checkout", { plan })
       .then((r) => r.data.data ?? r.data);
   },
-  createPortalSession() {
-    return apiClient.post("/billing/portal").then((r) => r.data.data ?? r.data);
+  cancelSubscription() {
+    return apiClient.post("/billing/cancel").then((r) => r.data.data ?? r.data);
   },
   getFeatureFlags() {
     return apiClient.get("/feature-flags").then((r) => r.data.data ?? r.data);

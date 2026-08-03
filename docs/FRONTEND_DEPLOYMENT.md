@@ -2,7 +2,7 @@
 
 ## Overview
 
-The ProcureAI web app is a Next.js 16 application with standalone output, optional Sentry monitoring, PWA support, and production Docker images.
+The SpendWise web app is a Next.js 16 application with standalone output, optional Sentry monitoring, PWA support, and production Docker images.
 
 ## Environment Variables
 

@@ -6,7 +6,7 @@ export default function MonitoringDocsPage() {
         <li>API health: <code>/api/v1/health/live</code> and <code>/ready</code></li>
         <li>Sentry for web and API error tracking</li>
         <li>CloudWatch for ECS, RDS, and Redis metrics on AWS</li>
-        <li>Stripe dashboard for webhook and subscription health</li>
+        <li>Paystack dashboard for webhook and subscription health</li>
       </ul>
     </article>
   );

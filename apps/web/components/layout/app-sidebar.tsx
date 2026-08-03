@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { BrandLogo } from "@/components/shared/brand-logo";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { filterNavigationByRole, mainNavigation } from "@/config/navigation";
-import { siteConfig } from "@/config/site";
 import { cn, formatRole } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -29,11 +29,8 @@ export function AppSidebar({ onNavigate, className }: AppSidebarProps) {
       )}
     >
       <div className="flex h-16 items-center gap-2 border-b px-4">
-        <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg text-sm font-bold">
-          PA
-        </div>
+        <BrandLogo href="/dashboard" size="sm" />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{siteConfig.name}</p>
           <p className="text-muted-foreground truncate text-xs">
             {organisation?.name ?? "Enterprise Procurement"}
           </p>

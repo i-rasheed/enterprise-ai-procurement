@@ -21,6 +21,6 @@ test.describe("SEO", () => {
   test("login page exposes metadata and lang", async ({ page }) => {
     await page.goto("/login");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page).toHaveTitle(/ProcureAI/i);
+    await expect(page).toHaveTitle(/SpendWise/i);
   });
 });

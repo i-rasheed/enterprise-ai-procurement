@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/shared/page-header";
+import { UserGuideDownloadCard } from "@/components/shared/user-guide-download-card";
 import { saasRepository } from "@/features/saas/api/saas.repository";
 
 export function SupportCenterPanel() {
@@ -35,6 +36,8 @@ export function SupportCenterPanel() {
         title="Support center"
         description="Open tickets for billing, onboarding, or product help."
       />
+
+      <UserGuideDownloadCard />
 
       <Card>
         <CardHeader>

@@ -66,8 +66,8 @@ model Organisation {
   slug        String       @unique
   plan        SubscriptionPlan @default(FREE)
   billingStatus BillingStatus @default(TRIALING)
-  stripeCustomerId String?  @unique
-  stripeSubscriptionId String? @unique
+  paystackCustomerCode String?  @unique
+  paystackSubscriptionCode String? @unique
   trialEndsAt DateTime?
   billingEmail String?
   settings    Json         @default("{}")
@@ -115,8 +115,8 @@ model Subscription {
   organisationId       String           @unique
   organisation         Organisation     @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   plan                 SubscriptionPlan
-  stripePriceId        String?
-  stripeSubscriptionId String?          @unique
+  paystackPlanCode        String?
+  paystackSubscriptionCode String?          @unique
   status               BillingStatus    @default(TRIALING)
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?

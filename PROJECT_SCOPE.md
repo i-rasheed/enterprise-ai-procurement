@@ -395,7 +395,7 @@ Statistics
 
 # Payments
 
-Stripe
+Paystack
 
 Plans
 
