@@ -57,6 +57,7 @@ docker build -f apps/api/Dockerfile -t enterprise-procurement-api .
 - [Architecture](docs/ARCHITECTURE.md)
 - [Testing Guide](docs/TESTING.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
+- [Railway Deployment](docs/RAILWAY_DEPLOYMENT.md)
 - [API Guide](docs/API_GUIDE.md)
 - [Environment Variables](docs/ENVIRONMENT.md)
 - [Contributing](CONTRIBUTING.md)
