@@ -1,0 +1,256 @@
+"use client";
+
+import axios, {
+  type AxiosError,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from "axios";
+
+import {
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  clearSessionCookie,
+  getRememberMePreference,
+  setRememberMePreference,
+  setSessionCookie,
+} from "@/lib/auth/session";
+import { env } from "@/lib/env";
+
+import { parseApiError } from "./errors";
+import type { ApiSuccessResponse, LoginResponse } from "./types";
+
+export {
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  clearSessionCookie,
+  getRememberMePreference,
+  setRememberMePreference,
+  setSessionCookie,
+};
+
+const CORRELATION_ID_HEADER = "x-correlation-id";
+
+type RetryableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
+
+type TokenListener = (tokens: {
+  accessToken: string | null;
+  refreshToken: string | null;
+}) => void;
+
+let refreshPromise: Promise<string | null> | null = null;
+const tokenListeners = new Set<TokenListener>();
+
+function generateCorrelationId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function readToken(key: string): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return (
+    localStorage.getItem(key) ??
+    sessionStorage.getItem(key)
+  );
+}
+
+export function getStoredAccessToken(): string | null {
+  return readToken(ACCESS_TOKEN_KEY);
+}
+
+export function getStoredRefreshToken(): string | null {
+  return readToken(REFRESH_TOKEN_KEY);
+}
+
+export function setStoredTokens(
+  accessToken: string | null,
+  refreshToken: string | null,
+  rememberMe = getRememberMePreference(),
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  setRememberMePreference(rememberMe);
+
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+
+  const storage = rememberMe ? localStorage : sessionStorage;
+
+  if (accessToken) {
+    storage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  }
+
+  if (refreshToken) {
+    storage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
+
+  if (accessToken) {
+    setSessionCookie();
+  } else {
+    clearSessionCookie();
+  }
+
+  tokenListeners.forEach((listener) =>
+    listener({ accessToken, refreshToken }),
+  );
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("auth:tokens-updated", {
+        detail: { accessToken, refreshToken },
+      }),
+    );
+  }
+}
+
+export function clearStoredTokens(): void {
+  setStoredTokens(null, null, getRememberMePreference());
+  clearSessionCookie();
+}
+
+export function subscribeToTokenChanges(listener: TokenListener): () => void {
+  tokenListeners.add(listener);
+  return () => tokenListeners.delete(listener);
+}
+
+function unwrapResponse<T>(payload: unknown): T {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "success" in payload &&
+    (payload as ApiSuccessResponse<T>).success === true &&
+    "data" in payload
+  ) {
+    return (payload as ApiSuccessResponse<T>).data;
+  }
+
+  return payload as T;
+}
+
+async function refreshAccessToken(client: AxiosInstance): Promise<string | null> {
+  const refreshToken = getStoredRefreshToken();
+
+  if (!refreshToken) {
+    clearStoredTokens();
+    return null;
+  }
+
+  try {
+    const response = await client.post<unknown>("/auth/refresh", {
+      refreshToken,
+    });
+    const data = unwrapResponse<LoginResponse>(response.data);
+
+    setStoredTokens(data.accessToken, data.refreshToken);
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("auth:session-refreshed", { detail: data }),
+      );
+    }
+
+    return data.accessToken;
+  } catch {
+    clearStoredTokens();
+    return null;
+  }
+}
+
+function createApiClient(): AxiosInstance {
+  const client = axios.create({
+    baseURL: env.apiUrl,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    timeout: 30_000,
+  });
+
+  client.interceptors.request.use((config) => {
+    const accessToken = getStoredAccessToken();
+
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    config.headers[CORRELATION_ID_HEADER] = generateCorrelationId();
+    return config;
+  });
+
+  client.interceptors.response.use(
+    (response) => {
+      response.data = unwrapResponse(response.data);
+      return response;
+    },
+    async (error: AxiosError) => {
+      const originalRequest = error.config as RetryableRequestConfig | undefined;
+      const url = originalRequest?.url ?? "";
+
+      if (
+        error.response?.status === 401 &&
+        originalRequest &&
+        !originalRequest._retry &&
+        !url.includes("/auth/login") &&
+        !url.includes("/auth/register") &&
+        !url.includes("/auth/refresh") &&
+        !url.includes("/auth/forgot-password") &&
+        !url.includes("/auth/reset-password") &&
+        !url.includes("/auth/verify-email")
+      ) {
+        originalRequest._retry = true;
+
+        refreshPromise ??= refreshAccessToken(client).finally(() => {
+          refreshPromise = null;
+        });
+
+        const newAccessToken = await refreshPromise;
+
+        if (newAccessToken) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return client(originalRequest);
+        }
+      }
+
+      return Promise.reject(parseApiError(error));
+    },
+  );
+
+  return client;
+}
+
+export const apiClient = createApiClient();
+
+export async function apiGet<T>(url: string, params?: Record<string, unknown>) {
+  const response = await apiClient.get<T>(url, { params });
+  return response.data;
+}
+
+export async function apiPost<T>(url: string, body?: unknown) {
+  const response = await apiClient.post<T>(url, body);
+  return response.data;
+}
+
+export async function apiPatch<T>(url: string, body?: unknown) {
+  const response = await apiClient.patch<T>(url, body);
+  return response.data;
+}
+
+export async function apiPut<T>(url: string, body?: unknown) {
+  const response = await apiClient.put<T>(url, body);
+  return response.data;
+}
+
+export async function apiDelete<T>(url: string) {
+  const response = await apiClient.delete<T>(url);
+  return response.data;
+}

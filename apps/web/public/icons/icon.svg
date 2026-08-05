@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SpendWise">
+  <defs>
+    <linearGradient id="sw-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="sw-accent" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#sw-bg)"/>
+  <path fill="url(#sw-accent)" d="M128 336V176h56c44 0 72 24 72 64 0 24-12 44-32 54l48 42h-64l-40-36v36h-40zm40-88h16c16 0 26-8 26-22s-10-22-26-22h-16v44z"/>
+  <path fill="#ffffff" d="M272 176h40v160h-40V176zm88 0c48 0 80 32 80 80s-32 80-80 80h-40V176h40zm0 120c24 0 40-16 40-40s-16-40-40-40v80z"/>
+  <path fill="url(#sw-accent)" opacity="0.9" d="M96 368h320" stroke="url(#sw-accent)" stroke-width="8" stroke-linecap="round"/>
+  <path fill="none" stroke="#34d399" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M112 328l48-40 40 24 64-72 96 48"/>
+</svg>

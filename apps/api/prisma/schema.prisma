@@ -1,0 +1,1054 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  role           Role           @default(USER)
+  isPlatformAdmin Boolean       @default(false)
+  isVerified     Boolean        @default(false)
+  failedLoginAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  mfaEnabled     Boolean        @default(false)
+  mfaSecret      String?
+
+  organisationId String
+  organisation   Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  refreshTokens         RefreshToken[]
+  authTokens            AuthToken[]
+  procurementRequests   ProcurementRequest[]
+  approvalSteps         ApprovalStep[]
+  createdRfqs           RFQ[]
+  submittedBids         Bid[]
+  bidEvaluations        BidEvaluation[]
+  awards                Award[]              @relation("AwardedBy")
+  issuedPurchaseOrders  PurchaseOrder[]      @relation("IssuedBy")
+  goodsReceipts         GoodsReceipt[]       @relation("ReceivedBy")
+  matchingResults       MatchingResult[]     @relation("MatchedBy")
+  createdContracts      Contract[]           @relation("ContractCreatedBy")
+  contractVersions      ContractVersion[]    @relation("ContractVersionCreatedBy")
+  uploadedContractDocs  ContractDocument[]   @relation("ContractDocumentUploadedBy")
+  aiPromptLogs          AiPromptLog[]
+  auditLogs             AuditLog[]
+  notifications         Notification[]
+  notificationPreference NotificationPreference?
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+enum Role {
+  USER
+  DEPARTMENT_HEAD
+  PROCUREMENT_MANAGER
+  FINANCE
+  ADMIN
+}
+
+model Organisation {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  plan        SubscriptionPlan @default(FREE)
+  billingStatus BillingStatus @default(TRIALING)
+  paystackCustomerCode String?  @unique
+  paystackSubscriptionCode String? @unique
+  trialEndsAt DateTime?
+  billingEmail String?
+  settings    Json         @default("{}")
+  onboardingStep Int       @default(0)
+  onboardingCompletedAt DateTime?
+  featureOverrides Json    @default("{}")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  users               User[]
+  invitations         Invitation[]
+  vendors             Vendor[]
+  procurementRequests ProcurementRequest[]
+  evaluationCriteria  EvaluationCriteria[]
+  purchaseOrders      PurchaseOrder[]
+  goodsReceipts       GoodsReceipt[]
+  invoices            Invoice[]
+  contracts           Contract[]
+  aiPromptLogs        AiPromptLog[]
+  embeddingRecords    EmbeddingRecord[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+  subscription        Subscription?
+  usageSnapshots      UsageSnapshot[]
+  supportTickets      SupportTicket[]
+}
+
+model PendingOrganisationRegistration {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  organisationName String
+  slug             String   @unique
+  firstName        String
+  lastName         String
+  passwordHash     String
+  tokenHash        String   @unique
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum BillingStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+model Subscription {
+  id                   String           @id @default(cuid())
+  organisationId       String           @unique
+  organisation         Organisation     @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan
+  paystackPlanCode        String?
+  paystackSubscriptionCode String?          @unique
+  status               BillingStatus    @default(TRIALING)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([status])
+}
+
+model UsageSnapshot {
+  id             String       @id @default(cuid())
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  metric         UsageMetric
+  value          Int          @default(0)
+  periodStart    DateTime
+  periodEnd      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organisationId, metric, periodStart])
+  @@index([organisationId])
+}
+
+enum UsageMetric {
+  USERS
+  PROCUREMENT_REQUESTS
+  AI_REQUESTS
+  STORAGE_MB
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model SupportTicket {
+  id             String              @id @default(cuid())
+  organisationId String
+  organisation   Organisation        @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  userId         String
+  subject        String
+  status         SupportTicketStatus @default(OPEN)
+  priority       SupportPriority     @default(NORMAL)
+  messages       SupportMessage[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([organisationId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SupportPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model SupportMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    String?
+  isStaff   Boolean       @default(false)
+  body      String
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId])
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  content     String
+  coverImage  String?
+  authorName  String
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([published, publishedAt])
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  subject   String
+  htmlBody  String
+  textBody  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ProcurementPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ProcurementStatus {
+  DRAFT
+  SUBMITTED
+  CANCELLED
+  REJECTED
+  APPROVED
+}
+
+model ProcurementRequest {
+  id                   String              @id @default(cuid())
+  organisationId       String
+  organisation         Organisation        @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  requesterId          String
+  requester            User                @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  title                String
+  description          String
+  justification        String
+  department           String
+  estimatedBudget      Decimal             @db.Decimal(14, 2)
+  currency             String              @default("USD")
+  priority             ProcurementPriority @default(MEDIUM)
+  status               ProcurementStatus   @default(DRAFT)
+  requiredDeliveryDate DateTime
+  items                ProcurementItem[]
+  approvalWorkflow     ApprovalWorkflow?
+  rfqs                 RFQ[]
+  awards               Award[]
+  purchaseOrders       PurchaseOrder[]
+  contracts            Contract[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@index([organisationId])
+  @@index([requesterId])
+  @@index([status])
+  @@index([priority])
+  @@index([department])
+}
+
+model ProcurementItem {
+  id                   String             @id @default(cuid())
+  procurementRequestId String
+  procurementRequest   ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  description          String
+  quantity             Int
+  unitPrice            Decimal            @db.Decimal(14, 2)
+  totalPrice           Decimal            @db.Decimal(14, 2)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([procurementRequestId])
+}
+
+enum RFQStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  CANCELLED
+}
+
+enum VendorInvitationStatus {
+  INVITED
+  VIEWED
+  RESPONDED
+  DECLINED
+}
+
+model RFQ {
+  id                   String             @id @default(cuid())
+  procurementRequestId String
+  procurementRequest   ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  rfqNumber            String             @unique
+  title                String
+  description          String
+  closingDate          DateTime
+  status               RFQStatus          @default(DRAFT)
+  createdById          String
+  createdBy            User               @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  vendors              RFQVendor[]
+  bids                 Bid[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([procurementRequestId])
+  @@index([status])
+  @@index([createdById])
+}
+
+model RFQVendor {
+  id          String                 @id @default(cuid())
+  rfqId       String
+  rfq         RFQ                    @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  vendorId    String
+  vendor      Vendor                 @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  invitedAt   DateTime               @default(now())
+  respondedAt DateTime?
+  status      VendorInvitationStatus @default(INVITED)
+
+  @@unique([rfqId, vendorId])
+  @@index([rfqId])
+  @@index([vendorId])
+  @@index([status])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED
+}
+
+enum WorkflowStatus {
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalLevelRole {
+  DEPARTMENT_HEAD
+  PROCUREMENT_MANAGER
+  FINANCE
+  ADMIN
+}
+
+model ApprovalWorkflow {
+  id                   String             @id @default(cuid())
+  procurementRequestId String             @unique
+  procurementRequest   ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  currentLevel         Int                @default(1)
+  status               WorkflowStatus     @default(IN_PROGRESS)
+  steps                ApprovalStep[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([status])
+}
+
+model ApprovalStep {
+  id         String            @id @default(cuid())
+  workflowId String
+  workflow   ApprovalWorkflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  approverId String
+  approver   User              @relation(fields: [approverId], references: [id], onDelete: Cascade)
+  role       ApprovalLevelRole
+  level      Int
+  status     ApprovalStatus    @default(PENDING)
+  comments   String?
+  actedAt    DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([workflowId, level])
+  @@index([workflowId])
+  @@index([approverId])
+  @@index([status])
+}
+
+enum BidStatus {
+  DRAFT
+  SUBMITTED
+  WITHDRAWN
+  DISQUALIFIED
+  AWARDED
+}
+
+model Bid {
+  id             String         @id @default(cuid())
+  rfqId          String
+  rfq            RFQ            @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  vendorId       String
+  vendor         Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  submittedById  String
+  submittedBy    User           @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  bidNumber      String         @unique
+  totalAmount    Decimal        @db.Decimal(14, 2) @default(0)
+  currency       String         @default("USD")
+  deliveryPeriod String?
+  paymentTerms   String?
+  warrantyPeriod String?
+  notes          String?
+  status         BidStatus      @default(DRAFT)
+  submittedAt    DateTime?
+  items          BidItem[]
+  attachments    BidAttachment[]
+  evaluations    BidEvaluation[]
+  award          Award?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([rfqId])
+  @@index([vendorId])
+  @@index([submittedById])
+  @@index([status])
+}
+
+model BidItem {
+  id          String   @id @default(cuid())
+  bidId       String
+  bid         Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(14, 2)
+  totalPrice  Decimal  @db.Decimal(14, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([bidId])
+}
+
+model BidAttachment {
+  id         String   @id @default(cuid())
+  bidId      String
+  bid        Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  fileName   String
+  fileUrl    String
+  fileType   String
+  uploadedAt DateTime @default(now())
+
+  @@index([bidId])
+}
+
+model EvaluationCriteria {
+  id             String       @id @default(cuid())
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  weight         Float        @default(1)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organisationId])
+}
+
+model BidEvaluation {
+  id               String   @id @default(cuid())
+  bidId            String
+  bid              Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  evaluatorId      String
+  evaluator        User     @relation(fields: [evaluatorId], references: [id], onDelete: Cascade)
+  technicalScore   Float
+  commercialScore  Float
+  complianceScore  Float
+  deliveryScore    Float
+  totalScore       Float
+  comments         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([bidId, evaluatorId])
+  @@index([bidId])
+  @@index([evaluatorId])
+}
+
+model Award {
+  id                   String             @id @default(cuid())
+  bidId                String             @unique
+  bid                  Bid                @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  procurementRequestId String             @unique
+  procurementRequest   ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  awardedById          String
+  awardedBy            User               @relation("AwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+  awardReason          String
+  awardedAt            DateTime           @default(now())
+  purchaseOrder        PurchaseOrder?
+  contracts            Contract[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([procurementRequestId])
+  @@index([awardedById])
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  ISSUED
+  ACKNOWLEDGED
+  PARTIALLY_DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+model PurchaseOrder {
+  id                   String                @id @default(cuid())
+  poNumber             String                @unique
+  organisationId       String
+  organisation         Organisation          @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  vendorId             String
+  vendor               Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  awardId              String                @unique
+  award                Award                 @relation(fields: [awardId], references: [id], onDelete: Cascade)
+  procurementRequestId String
+  procurementRequest   ProcurementRequest    @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  issuedById           String
+  issuedBy             User                  @relation("IssuedBy", fields: [issuedById], references: [id], onDelete: Cascade)
+  issueDate            DateTime?
+  expectedDeliveryDate DateTime
+  totalAmount          Decimal               @db.Decimal(14, 2) @default(0)
+  currency             String                @default("USD")
+  paymentTerms         String?
+  deliveryAddress      String?
+  notes                String?
+  status               PurchaseOrderStatus   @default(DRAFT)
+  items                PurchaseOrderItem[]
+  goodsReceipts        GoodsReceipt[]
+  invoices             Invoice[]
+  contracts              Contract[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@index([organisationId])
+  @@index([vendorId])
+  @@index([procurementRequestId])
+  @@index([issuedById])
+  @@index([status])
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  description     String
+  quantity        Int
+  unitPrice       Decimal       @db.Decimal(14, 2)
+  totalPrice      Decimal       @db.Decimal(14, 2)
+  goodsReceiptItems GoodsReceiptItem[]
+  invoiceItems      InvoiceItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([purchaseOrderId])
+}
+
+enum GoodsReceiptStatus {
+  DRAFT
+  RECEIVED
+  PARTIALLY_RECEIVED
+  REJECTED
+  COMPLETED
+}
+
+model GoodsReceipt {
+  id              String             @id @default(cuid())
+  receiptNumber   String             @unique
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  organisationId  String
+  organisation    Organisation       @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  receivedById    String
+  receivedBy      User               @relation("ReceivedBy", fields: [receivedById], references: [id], onDelete: Cascade)
+  receiptDate     DateTime
+  warehouse       String?
+  notes           String?
+  status          GoodsReceiptStatus @default(DRAFT)
+  items           GoodsReceiptItem[]
+  invoices        Invoice[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([organisationId])
+  @@index([receivedById])
+  @@index([status])
+}
+
+model GoodsReceiptItem {
+  id                  String            @id @default(cuid())
+  goodsReceiptId      String
+  goodsReceipt        GoodsReceipt      @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  purchaseOrderItemId String
+  purchaseOrderItem   PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id], onDelete: Cascade)
+  quantityOrdered     Int
+  quantityReceived    Int               @default(0)
+  quantityRejected    Int               @default(0)
+  remarks             String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([goodsReceiptId])
+  @@index([purchaseOrderItemId])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SUBMITTED
+  MATCHED
+  APPROVED
+  REJECTED
+  PAID
+}
+
+enum MatchStatus {
+  MATCHED
+  PRICE_MISMATCH
+  QUANTITY_MISMATCH
+  MISSING_GRN
+  MISSING_PO
+  FAILED
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  invoiceNumber   String        @unique
+  vendorId        String
+  vendor          Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  goodsReceiptId  String
+  goodsReceipt    GoodsReceipt  @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  organisationId  String
+  organisation    Organisation  @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  invoiceDate     DateTime
+  dueDate         DateTime
+  subtotal        Decimal       @db.Decimal(14, 2) @default(0)
+  taxAmount       Decimal       @db.Decimal(14, 2) @default(0)
+  totalAmount     Decimal       @db.Decimal(14, 2) @default(0)
+  currency        String        @default("USD")
+  paymentTerms    String?
+  status          InvoiceStatus @default(DRAFT)
+  notes           String?
+  items           InvoiceItem[]
+  matchingResult  MatchingResult?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([vendorId])
+  @@index([purchaseOrderId])
+  @@index([goodsReceiptId])
+  @@index([organisationId])
+  @@index([status])
+}
+
+model InvoiceItem {
+  id                  String            @id @default(cuid())
+  invoiceId           String
+  invoice             Invoice           @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  purchaseOrderItemId String
+  purchaseOrderItem   PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id], onDelete: Cascade)
+  description         String
+  quantity            Int
+  unitPrice           Decimal           @db.Decimal(14, 2)
+  totalPrice          Decimal           @db.Decimal(14, 2)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([invoiceId])
+  @@index([purchaseOrderItemId])
+}
+
+model MatchingResult {
+  id              String      @id @default(cuid())
+  invoiceId       String      @unique
+  invoice         Invoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  purchaseOrderId String
+  goodsReceiptId  String
+  matchStatus     MatchStatus
+  matchedById     String
+  matchedBy       User        @relation("MatchedBy", fields: [matchedById], references: [id], onDelete: Cascade)
+  matchedAt       DateTime    @default(now())
+  discrepancies   Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([goodsReceiptId])
+  @@index([matchedById])
+  @@index([matchStatus])
+}
+
+enum ContractStatus {
+  DRAFT
+  UNDER_REVIEW
+  ACTIVE
+  EXPIRED
+  TERMINATED
+  RENEWED
+}
+
+enum ContractType {
+  GOODS
+  SERVICES
+  CONSULTING
+  SOFTWARE
+  FRAMEWORK
+}
+
+model Contract {
+  id                    String         @id @default(cuid())
+  contractNumber        String         @unique
+  organisationId        String
+  organisation          Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  vendorId              String
+  vendor                Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  procurementRequestId  String
+  procurementRequest    ProcurementRequest @relation(fields: [procurementRequestId], references: [id], onDelete: Cascade)
+  purchaseOrderId       String?
+  purchaseOrder         PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  awardId               String?
+  award                 Award?         @relation(fields: [awardId], references: [id], onDelete: SetNull)
+  title                 String
+  description           String
+  contractType          ContractType
+  startDate             DateTime
+  endDate               DateTime
+  value                 Decimal        @db.Decimal(14, 2)
+  currency              String         @default("USD")
+  renewalType           String?
+  renewalDate           DateTime?
+  autoRenew             Boolean        @default(false)
+  status                ContractStatus @default(DRAFT)
+  signedByOrganisation  String?
+  signedByVendor        String?
+  createdById           String
+  createdBy             User           @relation("ContractCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  versions              ContractVersion[]
+  documents             ContractDocument[]
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([organisationId])
+  @@index([vendorId])
+  @@index([procurementRequestId])
+  @@index([purchaseOrderId])
+  @@index([awardId])
+  @@index([status])
+  @@index([contractType])
+}
+
+model ContractVersion {
+  id            String   @id @default(cuid())
+  contractId    String
+  contract      Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  version       Int
+  changeSummary String
+  createdById   String
+  createdBy     User     @relation("ContractVersionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([contractId, version])
+  @@index([contractId])
+  @@index([createdById])
+}
+
+model ContractDocument {
+  id          String   @id @default(cuid())
+  contractId  String
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  mimeType    String
+  uploadedById String
+  uploadedBy  User     @relation("ContractDocumentUploadedBy", fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedAt  DateTime @default(now())
+
+  @@index([contractId])
+  @@index([uploadedById])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model Invitation {
+  id             String           @id @default(cuid())
+  email          String
+  token          String           @unique
+  organisationId String
+  organisation   Organisation     @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  role           Role             @default(USER)
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([organisationId])
+  @@index([email])
+  @@index([status])
+}
+
+enum VendorStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BLACKLISTED
+}
+
+enum ComplianceStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Vendor {
+  id                      String           @id @default(cuid())
+  organisationId          String
+  organisation            Organisation     @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  name                    String
+  email                   String
+  phone                   String?
+  address                 String?
+  website                 String?
+  registrationNumber      String?
+  taxIdentificationNumber String?
+  category                String?
+  status                  VendorStatus     @default(ACTIVE)
+  rating                  Float?
+  complianceStatus        ComplianceStatus @default(PENDING)
+  notes                   String?
+  rfqVendors              RFQVendor[]
+  bids                    Bid[]
+  purchaseOrders          PurchaseOrder[]
+  invoices                Invoice[]
+  contracts               Contract[]
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  @@unique([organisationId, email])
+  @@unique([organisationId, registrationNumber])
+  @@index([organisationId])
+  @@index([status])
+  @@index([complianceStatus])
+  @@index([category])
+}
+
+enum EmbeddingEntityType {
+  CONTRACT
+  RFQ
+  PURCHASE_ORDER
+  INVOICE
+  PROCUREMENT_REQUEST
+  BID
+}
+
+model AiPromptLog {
+  id               String   @id @default(cuid())
+  organisationId   String
+  organisation     Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feature          String
+  prompt           String   @db.Text
+  response         String   @db.Text
+  model            String
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  executionTimeMs  Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  @@index([organisationId])
+  @@index([userId])
+  @@index([feature])
+  @@index([createdAt])
+}
+
+model EmbeddingRecord {
+  id             String              @id @default(cuid())
+  organisationId String
+  organisation   Organisation        @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  entityType     EmbeddingEntityType
+  entityId       String
+  content        String              @db.Text
+  embedding      Json
+  model          String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([entityType, entityId])
+  @@index([organisationId])
+  @@index([entityType])
+}
+
+enum AuditAction {
+  AUTH_LOGIN
+  AUTH_LOGOUT
+  AUTH_REGISTER
+  AUTH_TOKEN_REFRESH
+  AUTH_TOKEN_REVOKE
+  AUTH_LOGIN_FAILED
+  AUTH_ACCOUNT_LOCKED
+  AUTH_PASSWORD_RESET_REQUEST
+  AUTH_PASSWORD_RESET
+  AUTH_EMAIL_VERIFICATION_SENT
+  AUTH_EMAIL_VERIFIED
+  APPROVAL_APPROVED
+  APPROVAL_REJECTED
+  PROCUREMENT_CREATED
+  PROCUREMENT_UPDATED
+  PURCHASE_ORDER_CREATED
+  PURCHASE_ORDER_ISSUED
+  CONTRACT_CREATED
+  CONTRACT_UPDATED
+  INVOICE_CREATED
+  INVOICE_APPROVED
+  INVOICE_PAID
+  VENDOR_CREATED
+  VENDOR_UPDATED
+  ROLE_CHANGED
+  AI_USAGE
+  REPORT_EXPORT
+  REPORT_DOWNLOAD
+  USER_UPDATED
+}
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  organisationId String?
+  organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action         AuditAction
+  entityType     String?
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  correlationId  String?
+  createdAt      DateTime    @default(now())
+
+  @@index([organisationId])
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([correlationId])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ipAddress String?
+  userAgent String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+}
+
+model Notification {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  type           String
+  title          String
+  message        String
+  read           Boolean  @default(false)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([organisationId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model NotificationPreference {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled Boolean @default(true)
+  inAppEnabled Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  familyId  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+}
+
+enum AuthTokenType {
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+}
+
+model AuthToken {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String        @unique
+  type      AuthTokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, type])
+}
