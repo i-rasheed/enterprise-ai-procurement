@@ -9,6 +9,7 @@ import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthTokenRepository } from './auth-token.repository';
+import { PendingOrganisationRegistrationRepository } from './pending-organisation-registration.repository';
 import { RefreshTokenRepository } from './refresh-token.repository';
 import { JwtAuthGuard } from './guards/jwt/jwt.guard';
 import { RolesGuard } from './guards/roles.guard';
@@ -41,6 +42,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     AuthService,
     RefreshTokenRepository,
     AuthTokenRepository,
+    PendingOrganisationRegistrationRepository,
     JwtStrategy,
     JwtAuthGuard,
     RolesGuard,

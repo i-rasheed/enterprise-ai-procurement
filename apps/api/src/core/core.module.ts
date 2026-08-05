@@ -13,7 +13,7 @@ import envValidation from '../config/env.validation';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../../.env',
+      envFilePath: ['../../.env', '.env'],
       validate: envValidation,
     }),
     LoggerModule.forRoot({

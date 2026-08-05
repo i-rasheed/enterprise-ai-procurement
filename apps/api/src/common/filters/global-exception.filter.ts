@@ -11,6 +11,7 @@ import { Request, Response } from 'express';
 
 import type { EnvConfig } from '../../config/env.schema';
 import { CORRELATION_ID_HEADER } from '../constants/http.constants';
+import { formatErrorMessage, shouldFormatForClient } from '../utils/format-error-message.util';
 
 type ApiErrorResponse = {
   success: false;
@@ -25,6 +26,14 @@ type ApiErrorResponse = {
     path: string;
   };
 };
+
+const QUIET_NOT_FOUND_PATHS = new Set([
+  '/service-worker.js',
+  '/sw.js',
+  '/favicon.ico',
+  '/robots.txt',
+  '/manifest.webmanifest',
+]);
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -63,6 +72,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message = exception.message;
     }
 
+    if (shouldFormatForClient(message, status)) {
+      message = formatErrorMessage(message);
+    }
+
     const correlationId =
       request.correlationId ??
       (request.headers[CORRELATION_ID_HEADER] as string | undefined);
@@ -71,19 +84,26 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       EnvConfig['ENABLE_RESPONSE_WRAPPER']
     >('ENABLE_RESPONSE_WRAPPER', true);
 
-    this.logger.error(
-      `${request.method} ${request.url} ${status} - ${message}`,
-      exception instanceof Error ? exception.stack : undefined,
-    );
+    const logLine = `${request.method} ${request.url} ${status} - ${message}`;
+    const isQuietNotFound =
+      status === HttpStatus.NOT_FOUND &&
+      QUIET_NOT_FOUND_PATHS.has(request.path);
+
+    if (isQuietNotFound) {
+      this.logger.debug(logLine);
+    } else if (status >= 500) {
+      this.logger.error(
+        logLine,
+        exception instanceof Error ? exception.stack : undefined,
+      );
+    } else if (status >= 400) {
+      this.logger.warn(logLine);
+    } else {
+      this.logger.log(logLine);
+    }
 
     if (!enabled) {
-      response
-        .status(status)
-        .json(
-          typeof exceptionResponse === 'object' && exceptionResponse !== null
-            ? exceptionResponse
-            : { statusCode: status, message },
-        );
+      response.status(status).json({ statusCode: status, message });
       return;
     }
 

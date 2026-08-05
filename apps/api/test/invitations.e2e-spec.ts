@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { createTestApp } from './helpers/create-test-app';
+import { registerAndVerifyTestTenant } from './helpers/register-test-tenant';
 
 describe('Organisation invitations (e2e)', () => {
   let app: INestApplication;
@@ -23,19 +24,16 @@ describe('Organisation invitations (e2e)', () => {
   });
 
   it('registers admin and organisation', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        organisationName,
-        email: adminEmail,
-        password,
-        firstName: 'Admin',
-        lastName: 'User',
-      })
-      .expect(201);
+    const response = await registerAndVerifyTestTenant(app, {
+      organisationName,
+      email: adminEmail,
+      password,
+      firstName: 'Admin',
+      lastName: 'User',
+    });
 
-    organisationId = response.body.organisation.id as string;
-    adminToken = response.body.accessToken as string;
+    organisationId = response.organisation.id as string;
+    adminToken = response.accessToken as string;
   });
 
   it('POST /organisations/:organisationId/invitations creates invitation', async () => {
@@ -75,6 +73,19 @@ describe('Organisation invitations (e2e)', () => {
     expect(response.body.invitations).toHaveLength(1);
     expect(response.body.invitations[0].email).toBe(inviteeEmail);
     expect(response.body.invitations[0].token).toBeUndefined();
+  });
+
+  it('rejects accepting invitation when email already has an account', async () => {
+    const duplicateInvite = await request(app.getHttpServer())
+      .post(`/api/v1/organisations/${organisationId}/invitations`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        email: adminEmail,
+        role: 'USER',
+      })
+      .expect(409);
+
+    expect(duplicateInvite.body.message).toContain('already belongs');
   });
 
   it('POST /invitations/accept creates user from invitation', async () => {

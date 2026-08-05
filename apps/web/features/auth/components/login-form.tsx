@@ -21,7 +21,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
-import { env } from "@/lib/env";
 
 export function LoginForm() {
   const login = useLogin();
@@ -114,17 +113,6 @@ export function LoginForm() {
             <Link href="/register" className="text-primary hover:underline">
               Create an account
             </Link>
-          </p>
-          <p className="text-muted-foreground text-center text-xs">
-            API docs:{" "}
-            <a
-              href={env.apiDocsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Swagger
-            </a>
           </p>
         </CardFooter>
       </form>
