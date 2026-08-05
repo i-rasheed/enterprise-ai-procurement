@@ -4,6 +4,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  devIndicators: false,
   compress: true,
   reactStrictMode: true,
   images: {

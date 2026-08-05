@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export function AcceptInvitationForm() {
@@ -46,6 +47,7 @@ export function AcceptInvitationForm() {
         </CardDescription>
       </CardHeader>
       <form
+        className="flex flex-col gap-6"
         onSubmit={form.handleSubmit((values) => acceptInvitation.mutate(values))}
       >
         <CardContent className="space-y-4">
@@ -65,9 +67,8 @@ export function AcceptInvitationForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               {...form.register("password")}
             />

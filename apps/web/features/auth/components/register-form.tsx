@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export function RegisterForm() {
@@ -45,6 +46,7 @@ export function RegisterForm() {
         </CardDescription>
       </CardHeader>
       <form
+        className="flex flex-col gap-6"
         onSubmit={form.handleSubmit((values) =>
           registerMutation.mutate(values),
         )}
@@ -109,9 +111,8 @@ export function RegisterForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               {...form.register("password")}
             />

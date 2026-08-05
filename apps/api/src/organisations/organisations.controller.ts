@@ -38,12 +38,12 @@ import { OrganisationsService } from './organisations.service';
 
 @ApiTags('organisations')
 @ApiBearerAuth('JWT-auth')
-@Controller('organisations/me')
+@Controller('organisations')
 @UseGuards(JwtAuthGuard, TenantGuard)
 export class OrganisationsController {
   constructor(private readonly organisationsService: OrganisationsService) {}
 
-  @Get()
+  @Get('me')
   @ApiOperation({
     summary: 'Get current tenant organisation',
     description:
@@ -61,7 +61,7 @@ export class OrganisationsController {
     return this.organisationsService.findCurrentTenant(user.organisationId!);
   }
 
-  @Patch()
+  @Patch('me')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.PROCUREMENT_MANAGER)
   @ApiOperation({
@@ -102,7 +102,7 @@ export class OrganisationsController {
     );
   }
 
-  @Patch('members/:userId/role')
+  @Patch('me/members/:userId/role')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update organisation member role' })
@@ -123,7 +123,7 @@ export class OrganisationsController {
     return this.organisationsService.findCurrentTenant(user.organisationId!);
   }
 
-  @Delete()
+  @Delete('me')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiOperation({

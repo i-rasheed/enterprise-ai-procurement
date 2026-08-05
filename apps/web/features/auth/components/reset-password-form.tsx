@@ -18,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 type ResetPasswordFormProps = {
@@ -61,6 +61,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <CardDescription>Choose a strong new password.</CardDescription>
       </CardHeader>
       <form
+        className="flex flex-col gap-6"
         onSubmit={form.handleSubmit((values) =>
           resetPassword.mutate({ token, values }),
         )}
@@ -68,9 +69,8 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="password">New password</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               {...form.register("password")}
             />
@@ -82,9 +82,8 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirm password</Label>
-            <Input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
               autoComplete="new-password"
               {...form.register("confirmPassword")}
             />

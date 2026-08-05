@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import {
   vendorLoginSchema,
@@ -43,7 +44,9 @@ export function VendorLoginForm() {
           credentials. Your account email must match your vendor profile email.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={form.handleSubmit((values) => login.mutate(values))}>
+      <form
+        className="flex flex-col gap-6"
+        onSubmit={form.handleSubmit((values) => login.mutate(values))}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="vendorEmail">Email</Label>
@@ -57,9 +60,8 @@ export function VendorLoginForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="vendorPassword">Password</Label>
-            <Input
+            <PasswordInput
               id="vendorPassword"
-              type="password"
               autoComplete="current-password"
               placeholder="••••••••"
               {...form.register("password")}
