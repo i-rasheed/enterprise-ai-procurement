@@ -1,22 +1,19 @@
-# Railway config for the Web service.
-# Dashboard: Root Directory = / (repo root)
-# Dashboard: Railway Config File = /apps/web/railway.toml
-#
-# If the web service does not exist yet: + New → GitHub Repo → same repo → rename to "web"
+# Railway config for the Web service (auto-detected when Root Directory = apps/web).
+# If the web service does not exist: + New → GitHub Repo → same repo → rename to "web"
 
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "apps/web/Dockerfile"
+builder = "RAILPACK"
+buildCommand = "pnpm --filter web build"
 watchPatterns = [
   "apps/web/**",
   "packages/**",
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
-  "turbo.json",
 ]
 
 [deploy]
+startCommand = "HOSTNAME=0.0.0.0 node .next/standalone/apps/web/server.js"
 healthcheckPath = "/login"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

@@ -1,21 +1,18 @@
-# Railway config for the API service.
-# Dashboard: Root Directory = / (repo root)
-# Dashboard: Railway Config File = /apps/api/railway.toml
+# Railway config for the API service (auto-detected when Root Directory = apps/api).
 
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "apps/api/Dockerfile"
+builder = "RAILPACK"
+buildCommand = "DATABASE_URL=postgresql://build:build@localhost:5432/build pnpm --filter api build"
 watchPatterns = [
   "apps/api/**",
   "packages/**",
-  "scripts/railway-start-api.sh",
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
-  "turbo.json",
 ]
 
 [deploy]
+startCommand = "npx prisma migrate deploy --schema=prisma/schema.prisma && node dist/main.js"
 healthcheckPath = "/api/v1/health/ready"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
