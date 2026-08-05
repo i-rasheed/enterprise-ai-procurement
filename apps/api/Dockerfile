@@ -14,7 +14,8 @@ FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY . .
-RUN pnpm --filter api exec prisma generate
+# Prisma schema references DATABASE_URL; a placeholder is enough at build time.
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
 RUN pnpm --filter api build
 
 FROM node:22-alpine AS production
@@ -24,8 +25,10 @@ ENV NODE_ENV=production
 COPY --from=build /app/apps/api/dist ./dist
 COPY --from=build /app/apps/api/package.json ./
 COPY --from=build /app/apps/api/prisma ./prisma
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/node_modules ./node_modules
+COPY scripts/railway-start-api.sh ./start.sh
+RUN chmod +x ./start.sh
 EXPOSE 3001
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:3001/api/v1/health/live || exit 1
-CMD ["node", "dist/main.js"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://localhost:3001/api/v1/health/ready || exit 1
+CMD ["./start.sh"]
