@@ -2,6 +2,21 @@
 
 Deploy SpendWise on [Railway](https://railway.com) with **PostgreSQL**, **Redis**, **API**, and **Web** services.
 
+## Monorepo auto-detection
+
+Railway may create **api**, **docs**, and **mobile** automatically but **not web**. Each app has a `railway.toml` in its folder. After connecting the repo, configure **every service** in the dashboard:
+
+| Service | Root Directory | Railway Config File |
+|---------|----------------|---------------------|
+| **api** | `/` | `/apps/api/railway.toml` |
+| **web** | `/` | `/apps/web/railway.toml` |
+| **docs** | `/` | `/apps/docs/railway.toml` |
+| **mobile** | `/` | `/apps/mobile/railway.toml` (optional — delete this service if unused) |
+
+**Root Directory must be `/`** (repo root), not `apps/api`, so Docker can access the full monorepo.
+
+Redeploy each service after setting these. Config-as-code overrides the default `pnpm build` command that fails for the whole monorepo.
+
 ## Architecture
 
 | Service | Dockerfile | Port | Notes |
@@ -32,6 +47,7 @@ Railway injects `DATABASE_URL` and `REDIS_URL` into services that reference them
 2. Rename the service to `api`
 3. **Settings** → **Build**:
    - **Root Directory:** `/` (repository root)
+   - **Railway Config File:** `/apps/api/railway.toml`
    - **Dockerfile Path:** `apps/api/Dockerfile`
 4. **Settings** → **Networking** → **Generate Domain** (e.g. `spendwise-api-production.up.railway.app`)
 5. **Settings** → **Deploy** → **Healthcheck Path:** `/api/v1/health/ready`
@@ -64,11 +80,14 @@ Optional: Paystack, OpenAI, S3 — see [Environment Variables](./ENVIRONMENT.md)
 
 ## 4. Create the Web service
 
+Railway often skips **web** during monorepo import — add it manually:
+
 1. **+ New** → **GitHub Repo** → same repository
 2. Rename to `web`
 3. **Settings** → **Build**:
    - **Root Directory:** `/`
-   - **Dockerfile Path:** `apps/web/Dockerfile`
+   - **Railway Config File:** `/apps/web/railway.toml`
+   - **Dockerfile Path:** `apps/web/Dockerfile` (also set in `railway.toml`)
    - **Build Args** (required at build time):
 
      | Arg | Value |

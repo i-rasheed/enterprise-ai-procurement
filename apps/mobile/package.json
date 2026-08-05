@@ -46,6 +46,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "build": "node -e \"console.log('Mobile builds with Expo EAS, not Railway')\"",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",

@@ -1,0 +1,13 @@
+# Mobile (Expo) is not deployed on Railway. Delete this service in the dashboard,
+# or leave it with this config to avoid monorepo turbo build failures.
+#
+# Dashboard: Root Directory = / (repo root)
+# Dashboard: Railway Config File = /apps/mobile/railway.toml
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/mobile/Dockerfile"
+watchPatterns = ["apps/mobile/**"]
+
+[deploy]
+restartPolicyType = "NEVER"
