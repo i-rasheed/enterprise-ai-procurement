@@ -16,7 +16,7 @@ export const useVendorPortalStore = create<VendorPortalState>()(
       setVendor: (vendor) => set({ vendor }),
     }),
     {
-      name: "procureai-mobile-vendor",
+      name: "spendwise-mobile-vendor",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ vendor: state.vendor }),
     },

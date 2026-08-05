@@ -87,7 +87,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "procureai-mobile-auth",
+      name: "spendwise-mobile-auth",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         user: state.user,

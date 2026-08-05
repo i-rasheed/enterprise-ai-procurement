@@ -1,4 +1,4 @@
-# ProcureAI Mobile
+# SpendWise Mobile
 
 Expo React Native app for the enterprise procurement platform.
 

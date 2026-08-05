@@ -39,6 +39,7 @@ export function ForgotPasswordForm() {
         </CardDescription>
       </CardHeader>
       <form
+        className="flex flex-col gap-6"
         onSubmit={form.handleSubmit((values) => forgotPassword.mutate(values))}
       >
         <CardContent className="space-y-4">

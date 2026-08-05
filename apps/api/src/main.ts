@@ -43,7 +43,7 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('Enterprise AI Procurement API')
+    .setTitle('SpendWise API')
     .setDescription(
       'Multi-tenant Enterprise Procurement Management Platform API. Production-hardened with audit logging, rate limiting, and observability.',
     )

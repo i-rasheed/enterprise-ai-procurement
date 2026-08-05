@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" role="img" aria-label="SpendWise">
+  <defs>
+    <linearGradient id="sw-mark" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="4" width="56" height="56" rx="14" fill="#0f172a"/>
+  <path fill="url(#sw-mark)" d="M14 42V22h10c8 0 13 4 13 11 0 4-2 8-6 10l9 8h-11l-7-6v6h-8zm7-16h3c3 0 5-2 5-4s-2-4-5-4h-3v8z"/>
+  <path fill="#ffffff" d="M36 22h7v20h-7V22zm15 0c9 0 15 6 15 15s-6 15-15 15h-7V22h7zm0 22c5 0 8-3 8-7s-3-7-8-7v14z"/>
+  <path fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M10 46l8-7 7 4 11-12 17 8"/>
+  <text x="72" y="42" fill="#0f172a" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.02em">SpendWise</text>
+</svg>

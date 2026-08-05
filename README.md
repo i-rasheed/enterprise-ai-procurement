@@ -1,6 +1,6 @@
-# Enterprise AI Procurement Platform
+# SpendWise
 
-Production-ready multi-tenant procurement management platform with AI intelligence, analytics, and full procure-to-pay lifecycle.
+Production-ready multi-tenant procurement platform for smart spend control — AI intelligence, analytics, and full procure-to-pay lifecycle.
 
 ## Stack
 
@@ -55,6 +55,7 @@ docker build -f apps/api/Dockerfile -t enterprise-procurement-api .
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Testing Guide](docs/TESTING.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 - [API Guide](docs/API_GUIDE.md)
 - [Environment Variables](docs/ENVIRONMENT.md)

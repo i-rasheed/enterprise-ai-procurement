@@ -1,12 +1,12 @@
 import type { BrandingPreferences } from "../types";
 
-const STORAGE_KEY = "procureai-branding";
+const STORAGE_KEY = "spendwise-branding";
 
 const DEFAULTS: BrandingPreferences = {
   displayName: "",
   tagline: "",
   logoUrl: "",
-  primaryColor: "#2563eb",
+  primaryColor: "#10b981",
 };
 
 function readAll(): Record<string, BrandingPreferences> {

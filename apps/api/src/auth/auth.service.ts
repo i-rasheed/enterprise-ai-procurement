@@ -265,7 +265,7 @@ export class AuthService {
 
       await this.jobService.enqueueEmail({
         to: user.email,
-        subject: 'Reset your ProcureAI password',
+        subject: 'Reset your SpendWise password',
         html: `<p>Use this link to reset your password (expires in 1 hour):</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
       });
 
@@ -418,7 +418,7 @@ export class AuthService {
 
     await this.jobService.enqueueEmail({
       to: user.email,
-      subject: 'Verify your ProcureAI email',
+      subject: 'Verify your SpendWise email',
       html: `<p>Verify your email address:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
     });
 

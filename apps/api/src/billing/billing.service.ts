@@ -6,36 +6,31 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BillingStatus, SubscriptionPlan } from '@prisma/client';
-import Stripe from 'stripe';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import { PrismaService } from '../database/prisma.service';
 import { PLAN_CATALOG, TRIAL_DAYS } from './constants/plan.constants';
-
-type StripeSubscriptionRecord = {
-  id: string;
-  status: string;
-  metadata: Record<string, string>;
-  items: { data: Array<{ price: { id: string } }> };
-  current_period_start: number;
-  current_period_end: number;
-  cancel_at_period_end: boolean;
-};
+import {
+  PaystackClient,
+  type PaystackSubscription,
+  type PaystackWebhookEvent,
+} from './paystack.client';
 
 @Injectable()
 export class BillingService {
   private readonly logger = new Logger(BillingService.name);
-  private readonly stripe: Stripe | null;
+  private readonly paystack: PaystackClient | null;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
-    this.stripe = secretKey ? new Stripe(secretKey) : null;
+    const secretKey = this.configService.get<string>('PAYSTACK_SECRET_KEY');
+    this.paystack = secretKey ? new PaystackClient(secretKey) : null;
   }
 
-  isStripeEnabled(): boolean {
-    return this.stripe !== null;
+  isPaystackEnabled(): boolean {
+    return this.paystack !== null;
   }
 
   async ensureCustomer(organisationId: string, email: string) {
@@ -47,29 +42,29 @@ export class BillingService {
       throw new NotFoundException('Organisation not found');
     }
 
-    if (organisation.stripeCustomerId) {
-      return organisation.stripeCustomerId;
+    if (organisation.paystackCustomerCode) {
+      return organisation.paystackCustomerCode;
     }
 
-    if (!this.stripe) {
+    if (!this.paystack) {
       return null;
     }
 
-    const customer = await this.stripe.customers.create({
+    const customer = await this.paystack.createCustomer({
       email,
-      name: organisation.name,
+      firstName: organisation.name,
       metadata: { organisationId },
     });
 
     await this.prisma.organisation.update({
       where: { id: organisationId },
       data: {
-        stripeCustomerId: customer.id,
+        paystackCustomerCode: customer.customer_code,
         billingEmail: email,
       },
     });
 
-    return customer.id;
+    return customer.customer_code;
   }
 
   async getBillingOverview(organisationId: string) {
@@ -90,11 +85,11 @@ export class BillingService {
       subscription: organisation.subscription,
       plans: PLAN_CATALOG.map((entry) => ({
         ...entry,
-        stripePriceId: entry.stripePriceIdEnv
-          ? this.configService.get<string>(entry.stripePriceIdEnv) ?? null
+        paystackPlanCode: entry.paystackPlanCodeEnv
+          ? this.configService.get<string>(entry.paystackPlanCodeEnv) ?? null
           : null,
       })),
-      stripeEnabled: this.isStripeEnabled(),
+      paystackEnabled: this.isPaystackEnabled(),
     };
   }
 
@@ -103,180 +98,288 @@ export class BillingService {
     plan: SubscriptionPlan,
     email: string,
   ) {
-    if (!this.stripe) {
-      throw new BadRequestException('Stripe is not configured');
+    if (!this.paystack) {
+      throw new BadRequestException('Paystack is not configured');
     }
 
     const catalog = PLAN_CATALOG.find((entry) => entry.plan === plan);
 
-    if (!catalog || !catalog.stripePriceIdEnv) {
+    if (!catalog || !catalog.paystackPlanCodeEnv) {
       throw new BadRequestException('Invalid subscription plan');
     }
 
-    const priceId = this.configService.get<string>(catalog.stripePriceIdEnv);
+    const planCode = this.configService.get<string>(catalog.paystackPlanCodeEnv);
 
-    if (!priceId) {
-      throw new BadRequestException('Stripe price is not configured for plan');
+    if (!planCode) {
+      throw new BadRequestException('Paystack plan is not configured for plan');
     }
 
-    const customerId = await this.ensureCustomer(organisationId, email);
+    await this.ensureCustomer(organisationId, email);
     const frontendUrl = this.configService.get<string>(
       'FRONTEND_URL',
       'http://localhost:3000',
     );
 
-    const session = await this.stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer: customerId ?? undefined,
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${frontendUrl}/dashboard/billing?checkout=success`,
-      cancel_url: `${frontendUrl}/dashboard/billing?checkout=canceled`,
-      metadata: { organisationId, plan },
-      subscription_data: {
-        metadata: { organisationId, plan },
+    const transaction = await this.paystack.initializeTransaction({
+      email,
+      planCode,
+      callbackUrl: `${frontendUrl}/dashboard/billing?checkout=success`,
+      metadata: {
+        organisationId,
+        plan,
       },
     });
 
-    return { url: session.url };
+    return { url: transaction.authorization_url };
   }
 
-  async createPortalSession(organisationId: string) {
-    if (!this.stripe) {
-      throw new BadRequestException('Stripe is not configured');
+  async cancelSubscription(organisationId: string) {
+    if (!this.paystack) {
+      throw new BadRequestException('Paystack is not configured');
     }
 
     const organisation = await this.prisma.organisation.findUnique({
       where: { id: organisationId },
+      include: { subscription: true },
     });
 
-    if (!organisation?.stripeCustomerId) {
-      throw new BadRequestException('No billing customer found');
+    const subscriptionCode =
+      organisation?.paystackSubscriptionCode ??
+      organisation?.subscription?.paystackSubscriptionCode;
+
+    if (!organisation || !subscriptionCode) {
+      throw new BadRequestException('No active Paystack subscription found');
     }
 
-    const frontendUrl = this.configService.get<string>(
-      'FRONTEND_URL',
-      'http://localhost:3000',
+    const paystackSubscription =
+      await this.paystack.fetchSubscription(subscriptionCode);
+
+    await this.paystack.disableSubscription(
+      subscriptionCode,
+      paystackSubscription.email_token,
     );
 
-    const session = await this.stripe.billingPortal.sessions.create({
-      customer: organisation.stripeCustomerId,
-      return_url: `${frontendUrl}/dashboard/billing`,
+    await this.prisma.organisation.update({
+      where: { id: organisationId },
+      data: {
+        billingStatus: BillingStatus.CANCELED,
+      },
     });
 
-    return { url: session.url };
+    if (organisation.subscription) {
+      await this.prisma.subscription.update({
+        where: { organisationId },
+        data: {
+          status: BillingStatus.CANCELED,
+          cancelAtPeriodEnd: true,
+        },
+      });
+    }
+
+    return { canceled: true };
   }
 
   async handleWebhook(rawBody: Buffer, signature: string) {
-    if (!this.stripe) {
-      throw new BadRequestException('Stripe is not configured');
+    if (!this.paystack) {
+      throw new BadRequestException('Paystack is not configured');
     }
 
-    const webhookSecret = this.configService.get<string>(
-      'STRIPE_WEBHOOK_SECRET',
-    );
+    const secretKey = this.configService.get<string>('PAYSTACK_SECRET_KEY');
 
-    if (!webhookSecret) {
-      throw new BadRequestException('Stripe webhook secret is not configured');
+    if (!secretKey) {
+      throw new BadRequestException('Paystack secret key is not configured');
     }
 
-    const event = this.stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      webhookSecret,
-    );
+    this.verifyWebhookSignature(rawBody, signature, secretKey);
 
-    switch (event.type) {
-      case 'checkout.session.completed':
-        await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+    const event = JSON.parse(rawBody.toString()) as PaystackWebhookEvent;
+
+    switch (event.event) {
+      case 'charge.success':
+        await this.handleChargeSuccess(event.data);
         break;
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted':
-        await this.syncSubscription(
-          event.data.object as unknown as StripeSubscriptionRecord,
-        );
+      case 'subscription.create':
+        await this.syncSubscription(event.data as unknown as PaystackSubscription);
+        break;
+      case 'subscription.disable':
+        await this.handleSubscriptionDisabled(event.data);
+        break;
+      case 'invoice.payment_failed':
+        await this.handlePaymentFailed(event.data);
         break;
       default:
-        this.logger.debug(`Unhandled Stripe event: ${event.type}`);
+        this.logger.debug(`Unhandled Paystack event: ${event.event}`);
     }
 
     return { received: true };
   }
 
-  private async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-    const organisationId = session.metadata?.organisationId;
-    const plan = session.metadata?.plan as SubscriptionPlan | undefined;
+  private verifyWebhookSignature(
+    rawBody: Buffer,
+    signature: string,
+    secretKey: string,
+  ) {
+    const hash = createHmac('sha512', secretKey).update(rawBody).digest('hex');
+
+    const expected = Buffer.from(hash, 'utf8');
+    const received = Buffer.from(signature, 'utf8');
+
+    if (
+      expected.length !== received.length ||
+      !timingSafeEqual(expected, received)
+    ) {
+      throw new BadRequestException('Invalid Paystack webhook signature');
+    }
+  }
+
+  private async handleChargeSuccess(data: Record<string, unknown>) {
+    const metadata = (data.metadata ?? {}) as Record<string, string>;
+    const organisationId = metadata.organisationId;
+    const plan = metadata.plan as SubscriptionPlan | undefined;
 
     if (!organisationId || !plan) {
       return;
     }
+
+    const customer = data.customer as { customer_code?: string } | undefined;
+    const subscription = data.subscription as
+      | { subscription_code?: string }
+      | undefined;
 
     await this.prisma.organisation.update({
       where: { id: organisationId },
       data: {
         plan,
         billingStatus: BillingStatus.ACTIVE,
-        stripeSubscriptionId:
-          typeof session.subscription === 'string'
-            ? session.subscription
-            : session.subscription?.id,
+        paystackCustomerCode: customer?.customer_code,
+        paystackSubscriptionCode: subscription?.subscription_code,
       },
     });
   }
 
-  private async syncSubscription(stripeSubscription: StripeSubscriptionRecord) {
-    const organisationId = stripeSubscription.metadata.organisationId;
-    const plan = stripeSubscription.metadata.plan as SubscriptionPlan | undefined;
+  private async handleSubscriptionDisabled(data: Record<string, unknown>) {
+    const subscriptionCode =
+      (data.subscription_code as string | undefined) ??
+      (data.code as string | undefined);
 
-    if (!organisationId) {
+    if (!subscriptionCode) {
       return;
     }
 
-    const status = this.mapStripeStatus(stripeSubscription.status);
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { paystackSubscriptionCode: subscriptionCode },
+    });
+
+    if (!subscription) {
+      return;
+    }
 
     await this.prisma.organisation.update({
-      where: { id: organisationId },
+      where: { id: subscription.organisationId },
+      data: { billingStatus: BillingStatus.CANCELED },
+    });
+
+    await this.prisma.subscription.update({
+      where: { organisationId: subscription.organisationId },
+      data: {
+        status: BillingStatus.CANCELED,
+        cancelAtPeriodEnd: true,
+      },
+    });
+  }
+
+  private async handlePaymentFailed(data: Record<string, unknown>) {
+    const subscriptionCode = (data.subscription as { subscription_code?: string })
+      ?.subscription_code;
+
+    if (!subscriptionCode) {
+      return;
+    }
+
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { paystackSubscriptionCode: subscriptionCode },
+    });
+
+    if (!subscription) {
+      return;
+    }
+
+    await this.prisma.organisation.update({
+      where: { id: subscription.organisationId },
+      data: { billingStatus: BillingStatus.PAST_DUE },
+    });
+
+    await this.prisma.subscription.update({
+      where: { organisationId: subscription.organisationId },
+      data: { status: BillingStatus.PAST_DUE },
+    });
+  }
+
+  private async syncSubscription(paystackSubscription: PaystackSubscription) {
+    const customerCode = paystackSubscription.customer.customer_code;
+    const organisation = await this.prisma.organisation.findFirst({
+      where: { paystackCustomerCode: customerCode },
+    });
+
+    if (!organisation) {
+      return;
+    }
+
+    const catalogEntry = PLAN_CATALOG.find(
+      (entry) =>
+        entry.paystackPlanCodeEnv &&
+        this.configService.get<string>(entry.paystackPlanCodeEnv) ===
+          paystackSubscription.plan.plan_code,
+    );
+
+    const plan = catalogEntry?.plan;
+    const status = this.mapPaystackStatus(paystackSubscription.status);
+    const nextPaymentDate = paystackSubscription.next_payment_date
+      ? new Date(paystackSubscription.next_payment_date)
+      : null;
+
+    await this.prisma.organisation.update({
+      where: { id: organisation.id },
       data: {
         plan: plan ?? undefined,
         billingStatus: status,
-        stripeSubscriptionId: stripeSubscription.id,
+        paystackSubscriptionCode: paystackSubscription.subscription_code,
       },
     });
 
     await this.prisma.subscription.upsert({
-      where: { organisationId },
+      where: { organisationId: organisation.id },
       create: {
-        organisationId,
+        organisationId: organisation.id,
         plan: plan ?? SubscriptionPlan.STARTER,
-        stripePriceId: stripeSubscription.items.data[0]?.price.id,
-        stripeSubscriptionId: stripeSubscription.id,
+        paystackPlanCode: paystackSubscription.plan.plan_code,
+        paystackSubscriptionCode: paystackSubscription.subscription_code,
         status,
-        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
-        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+        currentPeriodStart: new Date(paystackSubscription.createdAt),
+        currentPeriodEnd: nextPaymentDate,
+        cancelAtPeriodEnd: false,
       },
       update: {
         plan: plan ?? undefined,
-        stripePriceId: stripeSubscription.items.data[0]?.price.id,
+        paystackPlanCode: paystackSubscription.plan.plan_code,
+        paystackSubscriptionCode: paystackSubscription.subscription_code,
         status,
-        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
-        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+        currentPeriodEnd: nextPaymentDate,
+        cancelAtPeriodEnd: false,
       },
     });
   }
 
-  private mapStripeStatus(status: string): BillingStatus {
+  private mapPaystackStatus(status: string): BillingStatus {
     switch (status) {
       case 'active':
         return BillingStatus.ACTIVE;
-      case 'trialing':
-        return BillingStatus.TRIALING;
-      case 'past_due':
-        return BillingStatus.PAST_DUE;
-      case 'canceled':
+      case 'non-renewing':
         return BillingStatus.CANCELED;
-      case 'unpaid':
-        return BillingStatus.UNPAID;
+      case 'attention':
+        return BillingStatus.PAST_DUE;
+      case 'completed':
+        return BillingStatus.CANCELED;
       default:
         return BillingStatus.ACTIVE;
     }

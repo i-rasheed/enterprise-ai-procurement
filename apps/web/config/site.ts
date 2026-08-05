@@ -1,12 +1,13 @@
 export const siteConfig = {
-  name: "ProcureAI",
+  name: "SpendWise",
   description:
-    "Enterprise AI procurement platform for requests, approvals, RFQs, contracts, and analytics.",
+    "Enterprise procurement platform for smart spend control — requests, approvals, RFQs, contracts, and AI-powered analytics.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   ogImage: "/og-image.svg",
   locale: "en_US",
   keywords: [
     "procurement",
+    "spend management",
     "enterprise",
     "approvals",
     "RFQ",
@@ -15,10 +16,12 @@ export const siteConfig = {
     "AI",
   ],
   links: {
-    support: "mailto:support@procureai.app",
+    support: "mailto:support@spendwise.app",
     docs: "/docs",
+    userGuide: "/download/user-guide",
+    userGuideMarkdown: "docs/SpendWise-User-Guide.md",
   },
-  creator: "ProcureAI",
+  creator: "SpendWise",
 } as const;
 
 export const publicRoutes = [
@@ -34,4 +37,5 @@ export const publicRoutes = [
   "/verify-email",
   "/accept-invitation",
   "/vendor/login",
+  "/download/user-guide",
 ] as const;

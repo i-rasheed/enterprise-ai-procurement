@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/shared/brand-logo";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 
@@ -14,12 +15,7 @@ export function MarketingHeader() {
   return (
     <header className="border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-6">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg text-sm">
-            PA
-          </span>
-          {siteConfig.name}
-        </Link>
+        <BrandLogo size="md" />
         <nav className="hidden items-center gap-6 text-sm md:flex">
           {links.map((link) => (
             <Link
@@ -64,6 +60,12 @@ export function MarketingFooter() {
             <li><Link href="/features">Features</Link></li>
             <li><Link href="/pricing">Pricing</Link></li>
             <li><Link href="/blog">Blog</Link></li>
+            <li>
+              <a href={siteConfig.links.userGuide} download="SpendWise-User-Guide.pdf">
+                User guide (PDF)
+              </a>
+            </li>
+            <li>User guide (Markdown): docs/SpendWise-User-Guide.md</li>
           </ul>
         </div>
         <div>

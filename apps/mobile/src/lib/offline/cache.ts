@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const OFFLINE_CACHE_PREFIX = "procureai.offline.";
+const OFFLINE_CACHE_PREFIX = "spendwise.offline.";
 
 export async function setOfflineCache<T>(key: string, value: T): Promise<void> {
   await AsyncStorage.setItem(

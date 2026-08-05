@@ -13,7 +13,7 @@ export default function ContactPage() {
             <CardTitle>Sales</CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
-            Email <a href="mailto:sales@procureai.app">sales@procureai.app</a> for Enterprise pricing and AWS deployment support.
+            Email <a href="mailto:sales@spendwise.app">sales@spendwise.app</a> for Enterprise pricing and AWS deployment support.
           </CardContent>
         </Card>
         <Card>

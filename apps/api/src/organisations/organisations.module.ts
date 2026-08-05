@@ -16,7 +16,7 @@ import { OrganisationsService } from './organisations.service';
     UsersModule,
     forwardRef(() => PlatformModule),
   ],
-  controllers: [OrganisationsCrudController, OrganisationsController],
+  controllers: [OrganisationsController, OrganisationsCrudController],
   providers: [OrganisationsService, OrganisationRepository],
   exports: [OrganisationsService, OrganisationRepository],
 })

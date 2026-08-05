@@ -1,6 +1,6 @@
 import type { ChatMessage, StoredConversation } from "../types";
 
-const STORAGE_KEY = "procureai-assistant-conversations";
+const STORAGE_KEY = "spendwise-assistant-conversations";
 const MAX_CONVERSATIONS = 30;
 
 function readAll(): StoredConversation[] {

@@ -1,4 +1,4 @@
-# ProcureAI Web
+# SpendWise Web
 
 Next.js frontend for the enterprise procurement platform.
 

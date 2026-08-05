@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { env } from "@/lib/env";
 
@@ -42,7 +43,9 @@ export function LoginForm() {
           Access your procurement workspace with your organisation credentials.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={form.handleSubmit((values) => login.mutate(values))}>
+      <form
+        className="flex flex-col gap-6"
+        onSubmit={form.handleSubmit((values) => login.mutate(values))}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -70,9 +73,8 @@ export function LoginForm() {
                 Forgot password?
               </Link>
             </div>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
               placeholder="••••••••"
               aria-invalid={Boolean(form.formState.errors.password)}

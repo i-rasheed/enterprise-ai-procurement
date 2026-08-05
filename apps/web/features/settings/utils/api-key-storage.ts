@@ -1,6 +1,6 @@
 import type { StoredApiKey } from "../types";
 
-const STORAGE_KEY = "procureai-api-keys";
+const STORAGE_KEY = "spendwise-api-keys";
 
 function readAll(): StoredApiKey[] {
   if (typeof window === "undefined") {

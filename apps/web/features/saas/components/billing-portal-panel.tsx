@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { saasRepository } from "@/features/saas/api/saas.repository";
 import { Badge } from "@/components/ui/badge";
 
 export function BillingPortalPanel() {
+  const queryClient = useQueryClient();
+
   const overviewQuery = useQuery({
     queryKey: ["billing", "overview"],
     queryFn: () => saasRepository.getBillingOverview(),
@@ -29,12 +31,10 @@ export function BillingPortalPanel() {
     },
   });
 
-  const portalMutation = useMutation({
-    mutationFn: () => saasRepository.createPortalSession(),
-    onSuccess: (data) => {
-      if (data.url) {
-        window.location.href = data.url;
-      }
+  const cancelMutation = useMutation({
+    mutationFn: () => saasRepository.cancelSubscription(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["billing", "overview"] });
     },
   });
 
@@ -45,7 +45,7 @@ export function BillingPortalPanel() {
     <div className="space-y-6">
       <PageHeader
         title="Billing"
-        description="Manage your subscription, usage, and Stripe customer portal."
+        description="Manage your subscription, usage, and Paystack payments."
       />
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -67,9 +67,21 @@ export function BillingPortalPanel() {
             ) : null}
             <Button
               variant="outline"
-              disabled={!overview?.stripeEnabled || portalMutation.isPending}
-              onClick={() => portalMutation.mutate()}>
-              Manage subscription
+              disabled={
+                !overview?.paystackEnabled ||
+                cancelMutation.isPending ||
+                overview?.billingStatus === "CANCELED"
+              }
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Cancel your Paystack subscription? You will keep access until the current billing period ends.",
+                  )
+                ) {
+                  cancelMutation.mutate();
+                }
+              }}>
+              Cancel subscription
             </Button>
           </CardContent>
         </Card>
@@ -102,7 +114,7 @@ export function BillingPortalPanel() {
           {["STARTER", "PROFESSIONAL"].map((plan) => (
             <Button
               key={plan}
-              disabled={!overview?.stripeEnabled || checkoutMutation.isPending}
+              disabled={!overview?.paystackEnabled || checkoutMutation.isPending}
               onClick={() => checkoutMutation.mutate(plan)}>
               Upgrade to {plan.toLowerCase()}
             </Button>

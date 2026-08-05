@@ -24,7 +24,7 @@ export const useAssistantStore = create<AssistantState>()(
       clearMessages: () => set({ messages: [] }),
     }),
     {
-      name: "procureai-mobile-assistant",
+      name: "spendwise-mobile-assistant",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ messages: state.messages }),
     },

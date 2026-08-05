@@ -1,6 +1,6 @@
 const requiredEnv = {
   apiUrl: process.env.NEXT_PUBLIC_API_URL,
-  appName: process.env.NEXT_PUBLIC_APP_NAME ?? "ProcureAI",
+  appName: process.env.NEXT_PUBLIC_APP_NAME ?? "SpendWise",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   apiDocsUrl: process.env.NEXT_PUBLIC_API_DOCS_URL ?? "http://localhost:3001/docs",
   sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? "",

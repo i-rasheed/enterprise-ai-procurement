@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const SYNC_QUEUE_KEY = "procureai.offline.syncQueue";
+const SYNC_QUEUE_KEY = "spendwise.offline.syncQueue";
 
 export type SyncQueueItem = {
   id: string;

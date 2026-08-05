@@ -1,4 +1,4 @@
-# ProcureAI SaaS — AWS Production Deployment
+# SpendWise SaaS — AWS Production Deployment
 
 This guide describes deploying the multi-tenant SaaS platform to AWS using the Terraform reference in `infra/aws/`.
 
@@ -13,14 +13,14 @@ This guide describes deploying the multi-tenant SaaS platform to AWS using the T
 | Cache/queues | ElastiCache Redis 7 | BullMQ email and jobs |
 | File storage | S3 | Contract documents and exports |
 | Backups | S3 + RDS snapshots | Versioned backup bucket |
-| Secrets | Secrets Manager | Stripe, JWT, SMTP, OpenAI |
+| Secrets | Secrets Manager | Paystack, JWT, SMTP, OpenAI |
 | Monitoring | CloudWatch + Sentry | Logs, metrics, error tracking |
 
 ## Prerequisites
 
 - AWS account with IAM permissions for VPC, ECS, RDS, ElastiCache, S3, ECR
 - Domain + ACM certificate for HTTPS
-- Stripe account with products/prices for Starter, Professional, Enterprise
+- Paystack account with subscription plans for Starter, Professional, Enterprise
 - SMTP provider (SES, SendGrid, etc.)
 
 ## 1. Provision infrastructure
@@ -39,12 +39,12 @@ Update the RDS master password via Secrets Manager before production use.
 ```bash
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
 
-docker build -f apps/api/Dockerfile -t procureai-api .
-docker tag procureai-api:latest <ecr_api_repository_url>:latest
+docker build -f apps/api/Dockerfile -t spendwise-api .
+docker tag spendwise-api:latest <ecr_api_repository_url>:latest
 docker push <ecr_api_repository_url>:latest
 
-docker build -f apps/web/Dockerfile -t procureai-web .
-docker tag procureai-web:latest <ecr_web_repository_url>:latest
+docker build -f apps/web/Dockerfile -t spendwise-web .
+docker tag spendwise-web:latest <ecr_web_repository_url>:latest
 docker push <ecr_web_repository_url>:latest
 ```
 
@@ -55,17 +55,17 @@ Store secrets in AWS Secrets Manager and inject into ECS task definitions:
 ### API
 
 ```
-DATABASE_URL=postgresql://procureai:***@<rds_endpoint>:5432/procureai
+DATABASE_URL=postgresql://spendwise:***@<rds_endpoint>:5432/spendwise
 REDIS_URL=redis://<redis_endpoint>:6379
 JWT_ACCESS_SECRET=...
 JWT_REFRESH_SECRET=...
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_STARTER=price_...
-STRIPE_PRICE_PROFESSIONAL=price_...
-STRIPE_PRICE_ENTERPRISE=price_...
+PAYSTACK_SECRET_KEY=sk_live_...
+PAYSTACK_PUBLIC_KEY=pk_live_...
+PAYSTACK_PLAN_STARTER=PLN_...
+PAYSTACK_PLAN_PROFESSIONAL=PLN_...
+PAYSTACK_PLAN_ENTERPRISE=PLN_...
 SMTP_HOST=...
-SMTP_FROM=ProcureAI <noreply@yourdomain.com>
+SMTP_FROM=SpendWise <noreply@yourdomain.com>
 FRONTEND_URL=https://app.yourdomain.com
 CORS_ORIGINS=https://app.yourdomain.com
 OPENAI_API_KEY=...
@@ -89,15 +89,15 @@ pnpm --filter api db:seed
 
 Run once from a migration task or CI job with VPC access to RDS.
 
-## 5. Stripe webhooks
+## 5. Paystack webhooks
 
-Point Stripe to:
+Point Paystack to:
 
 ```
-POST https://api.yourdomain.com/api/v1/billing/webhooks/stripe
+POST https://api.yourdomain.com/api/v1/billing/webhooks/paystack
 ```
 
-Enable events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`.
+Enable events: `charge.success`, `subscription.create`, `subscription.disable`, `invoice.payment_failed`.
 
 ## 6. Monitoring
 
@@ -133,7 +133,7 @@ GitHub Actions builds and tests on every PR. For production:
 
 ## 9. Post-deploy checklist
 
-- [ ] Stripe webhook verified
+- [ ] Paystack webhook verified
 - [ ] Trial registration creates organisation with 14-day trial
 - [ ] Feature flags gate AI on Free/Starter plans
 - [ ] Platform admin can access `/dashboard/admin`

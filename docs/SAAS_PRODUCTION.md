@@ -1,4 +1,4 @@
-# ProcureAI Multi-Tenant SaaS — Production Runbook
+# SpendWise Multi-Tenant SaaS — Production Runbook
 
 Operations guide for the subscription-based procurement platform.
 
@@ -7,7 +7,7 @@ Operations guide for the subscription-based procurement platform.
 | Capability | Implementation |
 |------------|----------------|
 | Subscription plans | `FREE`, `STARTER`, `PROFESSIONAL`, `ENTERPRISE` on `Organisation.plan` |
-| Stripe billing | Checkout, customer portal, webhooks → `billing` module |
+| Paystack billing | Checkout, subscriptions, webhooks → `billing` module |
 | Usage limits | Users, procurement requests, AI requests per plan |
 | Feature flags | Plan-based + per-tenant overrides in `featureOverrides` JSON |
 | Tenant isolation | JWT `organisationId` + Prisma row-level scoping |
@@ -52,18 +52,18 @@ Defined in `apps/api/src/billing/constants/plan.constants.ts`:
 | Support | `/api/v1/support/tickets` |
 | Platform admin | `/api/v1/platform/*` |
 | Public blog | `GET /api/v1/content/blog` |
-| Stripe webhook | `POST /api/v1/billing/webhooks/stripe` |
+| Paystack webhook | `POST /api/v1/billing/webhooks/paystack` |
 
 ## Environment variables
 
 ### API (required for SaaS)
 
 ```env
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-STRIPE_PRICE_STARTER=
-STRIPE_PRICE_PROFESSIONAL=
-STRIPE_PRICE_ENTERPRISE=
+PAYSTACK_SECRET_KEY=
+PAYSTACK_PUBLIC_KEY=
+PAYSTACK_PLAN_STARTER=
+PAYSTACK_PLAN_PROFESSIONAL=
+PAYSTACK_PLAN_ENTERPRISE=
 SMTP_HOST=
 SMTP_PORT=
 SMTP_USER=
@@ -72,7 +72,7 @@ SMTP_FROM=
 FRONTEND_URL=
 ```
 
-Stripe is optional in development — billing UI shows plans but checkout requires keys.
+Paystack is optional in development — billing UI shows plans but checkout requires keys.
 
 ## Platform admin access
 
@@ -86,7 +86,7 @@ Organisation CRUD (`/organisations`) is restricted to platform admins.
 
 1. **Register** — Creates organisation with 14-day trial, `billingStatus=TRIALING`
 2. **Onboarding** — Wizard steps: profile → invite team → first procurement → vendors → AI
-3. **Upgrade** — Stripe Checkout from `/dashboard/billing`
+3. **Upgrade** — Paystack checkout from `/dashboard/billing`
 4. **Usage enforcement** — Invitations check user limit; AI increments usage meter
 5. **Trial expiry** — `TenantBillingGuard` blocks access when trial ends without subscription
 
@@ -99,7 +99,7 @@ Templates support `{{variable}}` substitution. Queue jobs via BullMQ `email` que
 ## Monitoring checklist
 
 - API health endpoints responding
-- Stripe webhook delivery success rate
+- Paystack webhook delivery success rate
 - Email queue depth (BullMQ)
 - Sentry error volume by release
 - RDS CPU/storage and connection count
@@ -116,7 +116,7 @@ See [AWS_DEPLOYMENT.md](./AWS_DEPLOYMENT.md) for RDS snapshots and S3 backup pro
 
 - All tenant APIs require JWT with `organisationId`
 - Platform routes require `isPlatformAdmin`
-- Stripe webhook validates signature with raw body
+- Paystack webhook validates signature with raw body
 - Unauthenticated organisation listing removed (platform admin only)
 
 ## Local development

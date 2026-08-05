@@ -11,6 +11,6 @@ import { PlatformService } from './platform.service';
   imports: [DatabaseModule, UsersModule, SupportModule],
   controllers: [PlatformController],
   providers: [PlatformService, PlatformAdminGuard],
-  exports: [PlatformService, PlatformAdminGuard],
+  exports: [PlatformService, PlatformAdminGuard, UsersModule],
 })
 export class PlatformModule {}

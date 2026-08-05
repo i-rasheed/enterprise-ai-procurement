@@ -30,7 +30,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .catch(() => undefined);
 
     const received = addNotificationReceivedListener((notification) => {
-      const title = notification.request.content.title ?? "ProcureAI";
+      const title = notification.request.content.title ?? "SpendWise";
       const body = notification.request.content.body ?? "New update available";
       scheduleLocalNotification(title, body).catch(() => undefined);
       queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.notifications });

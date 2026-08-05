@@ -17,12 +17,16 @@ export function AppFooter() {
             Dashboard
           </Link>
           <Separator orientation="vertical" className="hidden h-4 md:block" />
-          <Link
-            href={siteConfig.links.support}
-            className="hover:text-foreground transition-colors"
-          >
+          <Link href="/dashboard/support" className="hover:text-foreground transition-colors">
             Support
           </Link>
+          <Separator orientation="vertical" className="hidden h-4 md:block" />
+          <a
+            href={siteConfig.links.userGuide}
+            download="SpendWise-User-Guide.pdf"
+            className="hover:text-foreground transition-colors">
+            User guide
+          </a>
           <Separator orientation="vertical" className="hidden h-4 md:block" />
           <span className="text-xs">v0.1.0</span>
         </div>

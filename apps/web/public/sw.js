@@ -1,4 +1,4 @@
-const CACHE_NAME = "procureai-static-v1";
+const CACHE_NAME = "spendwise-static-v1";
 const PRECACHE_URLS = ["/", "/login", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

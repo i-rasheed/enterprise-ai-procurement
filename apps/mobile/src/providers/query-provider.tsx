@@ -6,7 +6,7 @@ import { useState, type ReactNode } from "react";
 
 const persister = createAsyncStoragePersister({
   storage: AsyncStorage,
-  key: "procureai-query-cache",
+  key: "spendwise-query-cache",
 });
 
 export function QueryProvider({ children }: { children: ReactNode }) {
