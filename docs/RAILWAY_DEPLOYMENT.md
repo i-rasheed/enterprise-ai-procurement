@@ -4,18 +4,18 @@ Deploy SpendWise on [Railway](https://railway.com) with **PostgreSQL**, **Redis*
 
 ## Monorepo auto-detection
 
-Railway may create **api**, **docs**, and **mobile** automatically but **not web**. Each app has a `railway.toml` in its folder. After connecting the repo, configure **every service** in the dashboard:
+Railway may create **api**, **docs**, and **mobile** automatically but **not web**. Each app has a `railway.toml` with explicit **build** and **start** commands (Railpack).
 
-| Service | Root Directory | Railway Config File |
-|---------|----------------|---------------------|
-| **api** | `/` | `/apps/api/railway.toml` |
-| **web** | `/` | `/apps/web/railway.toml` |
-| **docs** | `/` | `/apps/docs/railway.toml` |
-| **mobile** | `/` | `/apps/mobile/railway.toml` (optional — delete this service if unused) |
+Leave the default **Root Directory** as the app folder (e.g. `apps/api`) so Railway auto-loads `apps/api/railway.toml`. Do **not** leave Root Directory as `/` unless you set a config file path manually.
 
-**Root Directory must be `/`** (repo root), not `apps/api`, so Docker can access the full monorepo.
+| Service | Root Directory | Config file (auto or manual) |
+|---------|----------------|------------------------------|
+| **api** | `apps/api` | `apps/api/railway.toml` |
+| **web** | `apps/web` | `apps/web/railway.toml` |
+| **docs** | `apps/docs` | `apps/docs/railway.toml` |
+| **mobile** | — | Delete this service (Expo app) |
 
-Redeploy each service after setting these. Config-as-code overrides the default `pnpm build` command that fails for the whole monorepo.
+Redeploy after pushing. If you see **"No start command detected"**, the service Root Directory is probably `/` — change it to the app folder above.
 
 ## Architecture
 
@@ -46,9 +46,8 @@ Railway injects `DATABASE_URL` and `REDIS_URL` into services that reference them
 1. **+ New** → **GitHub Repo** → same repository (or duplicate the existing service)
 2. Rename the service to `api`
 3. **Settings** → **Build**:
-   - **Root Directory:** `/` (repository root)
-   - **Railway Config File:** `/apps/api/railway.toml`
-   - **Dockerfile Path:** `apps/api/Dockerfile`
+   - **Root Directory:** `apps/api`
+   - (Config file `apps/api/railway.toml` is picked up automatically)
 4. **Settings** → **Networking** → **Generate Domain** (e.g. `spendwise-api-production.up.railway.app`)
 5. **Settings** → **Deploy** → **Healthcheck Path:** `/api/v1/health/ready`
 
@@ -85,13 +84,11 @@ Railway often skips **web** during monorepo import — add it manually:
 1. **+ New** → **GitHub Repo** → same repository
 2. Rename to `web`
 3. **Settings** → **Build**:
-   - **Root Directory:** `/`
-   - **Railway Config File:** `/apps/web/railway.toml`
-   - **Dockerfile Path:** `apps/web/Dockerfile` (also set in `railway.toml`)
-   - **Build Args** (required at build time):
+   - **Root Directory:** `apps/web`
+   - Set these **service variables** before the first deploy (baked in at build time):
 
-     | Arg | Value |
-     |-----|-------|
+     | Variable | Value |
+     |----------|-------|
      | `NEXT_PUBLIC_API_URL` | `https://YOUR-API-DOMAIN.up.railway.app/api/v1` |
      | `NEXT_PUBLIC_SITE_URL` | `https://YOUR-WEB-DOMAIN.up.railway.app` |
      | `NEXT_PUBLIC_APP_NAME` | `SpendWise` |
@@ -156,6 +153,7 @@ pnpm dev
 | Web shows wrong API | Rebuild web with correct `NEXT_PUBLIC_API_URL` build arg |
 | Emails not sending | Confirm SMTP vars; Gmail needs app password + port `465` |
 | Migrations failed | Ensure Postgres plugin is linked; check `DATABASE_URL` |
+| **No start command detected** | Set Root Directory to the app folder (`apps/api`, `apps/web`, …), not `/` |
 | Registration DB error | Run `railway run pnpm --filter api exec prisma migrate deploy` |
 
 ## Cost note
