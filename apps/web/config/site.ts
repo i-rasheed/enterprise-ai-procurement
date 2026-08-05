@@ -32,6 +32,7 @@ export const publicRoutes = [
   "/contact",
   "/login",
   "/register",
+  "/register/pending",
   "/forgot-password",
   "/reset-password",
   "/verify-email",

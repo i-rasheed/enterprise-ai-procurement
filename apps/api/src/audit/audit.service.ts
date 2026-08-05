@@ -16,19 +16,25 @@ export class AuditService {
   }
 
   async log(input: AuditLogInput): Promise<void> {
-    await this.auditRepository.create(input);
-    this.pinoLogger.info(
-      {
-        audit: true,
-        action: input.action,
-        userId: input.userId,
-        organisationId: input.organisationId,
-        entityType: input.entityType,
-        entityId: input.entityId,
-        correlationId: input.correlationId,
-      },
-      `Audit: ${input.action}`,
-    );
+    try {
+      await this.auditRepository.create(input);
+      this.pinoLogger.info(
+        {
+          audit: true,
+          action: input.action,
+          userId: input.userId,
+          organisationId: input.organisationId,
+          entityType: input.entityType,
+          entityId: input.entityId,
+          correlationId: input.correlationId,
+        },
+        `Audit: ${input.action}`,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Audit log skipped: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   logAuth(
@@ -85,17 +91,23 @@ export class AuditService {
     };
   }
 
-  recordLoginAttempt(
+  async recordLoginAttempt(
     email: string,
     success: boolean,
     ipAddress?: string,
     userAgent?: string,
   ) {
-    return this.auditRepository.recordLoginAttempt(
-      email,
-      success,
-      ipAddress,
-      userAgent,
-    );
+    try {
+      return await this.auditRepository.recordLoginAttempt(
+        email,
+        success,
+        ipAddress,
+        userAgent,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Login attempt log skipped: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 }

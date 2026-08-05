@@ -42,7 +42,8 @@ export function RegisterForm() {
       <CardHeader>
         <CardTitle>Create organisation</CardTitle>
         <CardDescription>
-          Register your company and admin account to start managing procurement.
+          Register with your company work email. Personal addresses such as
+          Gmail cannot be used to create an organisation.
         </CardDescription>
       </CardHeader>
       <form
@@ -107,7 +108,11 @@ export function RegisterForm() {
               <p className="text-destructive text-sm">
                 {form.formState.errors.email.message}
               </p>
-            ) : null}
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Use your company domain, for example admin@acme.com.
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -129,7 +134,7 @@ export function RegisterForm() {
             className="w-full"
             disabled={registerMutation.isPending}
           >
-            {registerMutation.isPending ? "Creating account..." : "Create account"}
+            {registerMutation.isPending ? "Submitting..." : "Create account"}
           </Button>
           <p className="text-muted-foreground text-center text-sm">
             Already have an account?{" "}

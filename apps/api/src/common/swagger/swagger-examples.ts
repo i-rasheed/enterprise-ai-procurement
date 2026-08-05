@@ -65,15 +65,10 @@ export const loginResponseExample = {
 };
 
 export const registerResponseExample = {
-  user: safeUserResponseExample,
-  organisation: {
-    id: 'clx789ghi012jkl',
-    name: 'Acme Corp',
-  },
-  accessToken:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxMjNhYmM0NTZkZWYiLCJlbWFpbCI6ImFkbWluQGFjbWUuY29tIiwicm9sZSI6IkFETUlOIiwib3JnYW5pc2F0aW9uSWQiOiJjbHg3ODlnaGkwMTJqa2wifQ.example',
-  refreshToken:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbHgxMjNhYmM0NTZkZWYiLCJlbWFpbCI6ImFkbWluQGFjbWUuY29tIiwicm9sZSI6IkFETUlOIiwib3JnYW5pc2F0aW9uSWQiOiJjbHg3ODnnaGkwMTJqa2wifQ.example',
+  message:
+    'We sent a verification link to your work email. Your organisation will be created after you verify.',
+  email: 'admin@acme.com',
+  verificationRequired: true,
 };
 
 export const refreshTokenRequestExample = {

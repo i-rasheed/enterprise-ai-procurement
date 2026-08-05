@@ -60,6 +60,11 @@ export class JobService {
       { task: 'cleanup-expired-tokens' },
       { repeat: { pattern: '0 2 * * *' } } as object,
     );
+    await this.scheduledQueue.add(
+      'cleanup-pending-registrations',
+      { task: 'cleanup-pending-registrations' },
+      { repeat: { pattern: '15 2 * * *' } } as object,
+    );
     this.logger.log('Recurring jobs scheduled');
   }
 }

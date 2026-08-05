@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { createTestApp } from './helpers/create-test-app';
+import { registerAndVerifyTestTenant } from './helpers/register-test-tenant';
 
 describe('Vendors (e2e)', () => {
   let app: INestApplication;
@@ -22,18 +23,15 @@ describe('Vendors (e2e)', () => {
   });
 
   it('registers admin tenant', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        organisationName,
-        email: adminEmail,
-        password,
-        firstName: 'Admin',
-        lastName: 'User',
-      })
-      .expect(201);
+    const response = await registerAndVerifyTestTenant(app, {
+      organisationName,
+      email: adminEmail,
+      password,
+      firstName: 'Admin',
+      lastName: 'User',
+    });
 
-    accessToken = response.body.accessToken as string;
+    accessToken = response.accessToken as string;
   });
 
   it('POST /vendors creates a vendor', async () => {

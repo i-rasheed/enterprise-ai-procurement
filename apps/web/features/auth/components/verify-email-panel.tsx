@@ -70,7 +70,7 @@ export function VerifyEmailPanel({ token }: VerifyEmailPanelProps) {
         <CardHeader>
           <CardTitle>Email verified</CardTitle>
           <CardDescription>
-            Your email address has been verified successfully.
+            Your organisation is ready. You can continue to the dashboard.
           </CardDescription>
         </CardHeader>
         <CardFooter>

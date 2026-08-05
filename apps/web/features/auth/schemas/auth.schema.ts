@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isPersonalEmail } from "@/features/auth/utils/work-email";
+
 const passwordSchema = z
   .string()
   .min(8, "Password must be at least 8 characters")
@@ -20,7 +22,13 @@ export const registerSchema = z.object({
     .min(2, "Organisation name must be at least 2 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Enter a valid email address"),
+  email: z
+    .string()
+    .email("Enter a valid email address")
+    .refine((value) => !isPersonalEmail(value), {
+      message:
+        "Use your company work email. Personal providers such as Gmail are not allowed.",
+    }),
   password: passwordSchema,
   rememberMe: z.boolean(),
 });

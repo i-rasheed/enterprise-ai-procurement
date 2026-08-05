@@ -60,6 +60,13 @@ export type RegisterResponse = AuthTokens & {
   organisation: OrganisationSummary;
 };
 
+export type RegisterPendingResponse = {
+  message: string;
+  email: string;
+  verificationRequired: true;
+  verificationToken?: string;
+};
+
 export type JwtPayload = {
   sub: string;
   email: string;
@@ -86,6 +93,10 @@ export type MessageResponse = {
 
 export type VerifyEmailResponse = MessageResponse & {
   isVerified: boolean;
+  user?: SafeUser;
+  organisation?: OrganisationSummary;
+  accessToken?: string;
+  refreshToken?: string;
 };
 
 export type RevokeSessionsResponse = MessageResponse & {

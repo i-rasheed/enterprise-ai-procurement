@@ -10,7 +10,7 @@ export class RegisterDto {
   @IsNotEmpty()
   organisationName: string;
 
-  @ApiProperty({ example: 'admin@acme.com' })
+  @ApiProperty({ example: 'admin@acme.com', description: 'Company work email' })
   @IsEmail()
   email: string;
 

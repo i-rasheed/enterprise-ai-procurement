@@ -8,7 +8,7 @@ import {
 import type {
   LoginResponse,
   MessageResponse,
-  RegisterResponse,
+  RegisterPendingResponse,
   RevokeSessionsResponse,
   UserProfile,
   VerifyEmailResponse,
@@ -51,15 +51,9 @@ export const authRepository = {
     return response;
   },
 
-  async register(input: RegisterInput): Promise<RegisterResponse> {
-    const { rememberMe = true, ...payload } = input;
-    const response = await apiPost<RegisterResponse>("/auth/register", payload);
-    setStoredTokens(
-      response.accessToken,
-      response.refreshToken,
-      rememberMe,
-    );
-    return response;
+  async register(input: RegisterInput): Promise<RegisterPendingResponse> {
+    const { rememberMe: _rememberMe, ...payload } = input;
+    return apiPost<RegisterPendingResponse>("/auth/register", payload);
   },
 
   async logout(refreshToken: string): Promise<void> {
@@ -79,7 +73,21 @@ export const authRepository = {
   },
 
   async verifyEmail(token: string): Promise<VerifyEmailResponse> {
-    return apiPost<VerifyEmailResponse>("/auth/verify-email", { token });
+    const response = await apiPost<VerifyEmailResponse>("/auth/verify-email", {
+      token,
+    });
+
+    if (response.accessToken && response.refreshToken) {
+      setStoredTokens(response.accessToken, response.refreshToken, true);
+    }
+
+    return response;
+  },
+
+  async resendRegistrationVerification(email: string): Promise<MessageResponse> {
+    return apiPost<MessageResponse>("/auth/resend-registration-verification", {
+      email,
+    });
   },
 
   async resendVerification(): Promise<VerifyEmailResponse> {

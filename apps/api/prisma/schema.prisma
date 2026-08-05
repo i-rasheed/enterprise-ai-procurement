@@ -12,7 +12,7 @@ datasource db {
 
 model User {
   id             String         @id @default(cuid())
-  email          String
+  email          String         @unique
   passwordHash   String
   firstName      String
   lastName       String
@@ -48,8 +48,6 @@ model User {
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-
-  @@unique([organisationId, email])
 }
 
 enum Role {
@@ -93,6 +91,21 @@ model Organisation {
   subscription        Subscription?
   usageSnapshots      UsageSnapshot[]
   supportTickets      SupportTicket[]
+}
+
+model PendingOrganisationRegistration {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  organisationName String
+  slug             String   @unique
+  firstName        String
+  lastName         String
+  passwordHash     String
+  tokenHash        String   @unique
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([expiresAt])
 }
 
 enum SubscriptionPlan {

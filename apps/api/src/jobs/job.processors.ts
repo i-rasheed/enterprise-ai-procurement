@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 
 import { MailerService } from '../email/email.service';
+import { PrismaService } from '../database/prisma.service';
 import {
   AiJobData,
   EmailJobData,
@@ -23,7 +24,7 @@ export class EmailProcessor extends WorkerHost {
   async process(job: Job<EmailJobData>): Promise<void> {
     this.logger.log(`Processing email job ${job.id} to ${job.data.to}`);
 
-    if (job.data.templateKey) {
+    if ('templateKey' in job.data) {
       await this.mailerService.sendTemplate(
         job.data.to,
         job.data.templateKey,
@@ -77,8 +78,21 @@ export class AiProcessor extends WorkerHost {
 export class ScheduledProcessor extends WorkerHost {
   private readonly logger = new Logger(ScheduledProcessor.name);
 
-  process(job: Job<ScheduledJobData>): Promise<void> {
+  constructor(private readonly prisma: PrismaService) {
+    super();
+  }
+
+  async process(job: Job<ScheduledJobData>): Promise<void> {
     this.logger.log(`Running scheduled task: ${job.data.task}`);
-    return Promise.resolve();
+
+    if (job.data.task === 'cleanup-pending-registrations') {
+      const result =
+        await this.prisma.pendingOrganisationRegistration.deleteMany({
+          where: { expiresAt: { lt: new Date() } },
+        });
+      this.logger.log(
+        `Removed ${result.count} expired pending organisation registrations`,
+      );
+    }
   }
 }

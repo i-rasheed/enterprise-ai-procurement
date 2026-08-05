@@ -5,11 +5,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Invitation, InvitationStatus, UsageMetric } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 import { JwtPayload } from '../common/types/jwt-payload.interface';
 import { UsageService } from '../billing/usage.service';
+import { JobService } from '../jobs/job.service';
 import { OrganisationRepository } from '../organisations/organisation.repository';
 import { UsersService } from '../users/users.service';
 import { createTokenId, hashToken } from '../auth/utils/token.util';
@@ -26,6 +28,8 @@ export class InvitationsService {
     private readonly organisationRepository: OrganisationRepository,
     private readonly usersService: UsersService,
     private readonly usageService: UsageService,
+    private readonly jobService: JobService,
+    private readonly configService: ConfigService,
   ) {}
 
   async inviteUser(
@@ -49,6 +53,14 @@ export class InvitationsService {
 
     if (existingUser) {
       throw new ConflictException('User already belongs to this organisation');
+    }
+
+    const existingAccount = await this.usersService.findFirstByEmail(dto.email);
+
+    if (existingAccount) {
+      throw new ConflictException(
+        'An account with this email already exists. The user should sign in instead.',
+      );
     }
 
     const pendingInvitation =
@@ -82,6 +94,21 @@ export class InvitationsService {
       organisationId,
       role: dto.role,
       expiresAt,
+    });
+
+    const frontendUrl = this.configService.get<string>(
+      'FRONTEND_URL',
+      'http://localhost:3000',
+    );
+    const inviteUrl = `${frontendUrl}/accept-invitation?token=${plainToken}`;
+
+    await this.jobService.enqueueEmail({
+      to: dto.email,
+      templateKey: 'invitation',
+      variables: {
+        organisationName: organisation.name,
+        inviteUrl,
+      },
     });
 
     return {
@@ -143,6 +170,16 @@ export class InvitationsService {
 
     if (existingUser) {
       throw new ConflictException('User already belongs to this organisation');
+    }
+
+    const existingAccount = await this.usersService.findFirstByEmail(
+      resolved.email,
+    );
+
+    if (existingAccount) {
+      throw new ConflictException(
+        'An account with this email already exists. Sign in with your existing account instead.',
+      );
     }
 
     const passwordHash = await argon2.hash(dto.password);

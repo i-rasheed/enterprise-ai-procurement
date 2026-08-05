@@ -55,6 +55,20 @@ export class TokenPairResponseDto {
   refreshToken: string;
 }
 
+export class RegisterPendingResponseDto {
+  @ApiProperty({
+    example:
+      'We sent a verification link to your work email. Your organisation will be created after you verify.',
+  })
+  message: string;
+
+  @ApiProperty({ example: 'admin@acme.com' })
+  email: string;
+
+  @ApiProperty({ example: true })
+  verificationRequired: boolean;
+}
+
 export class RegisterResponseDto extends TokenPairResponseDto {
   @ApiProperty({ type: OrganisationSummaryDto })
   organisation: OrganisationSummaryDto;

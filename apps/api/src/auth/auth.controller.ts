@@ -37,7 +37,7 @@ import { AuthService } from './auth.service';
 import {
   LoginResponseDto,
   LogoutResponseDto,
-  RegisterResponseDto,
+  RegisterPendingResponseDto,
 } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -45,6 +45,7 @@ import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendRegistrationVerificationDto } from './dto/resend-registration-verification.dto';
 import {
   MessageAuthResponseDto,
   VerifyEmailResponseDto,
@@ -82,10 +83,12 @@ export class AuthController {
     },
   })
   @ApiCreatedResponse({
-    type: RegisterResponseDto,
+    type: RegisterPendingResponseDto,
     schema: { example: registerResponseExample },
   })
-  @ApiConflictResponse({ description: 'Email already registered' })
+  @ApiConflictResponse({
+    description: 'Email already registered or organisation name taken',
+  })
   register(@Body() dto: RegisterDto, @Req() req: Request) {
     return this.authService.register(dto, this.extractContext(req));
   }
@@ -150,6 +153,23 @@ export class AuthController {
   @ApiOkResponse({ type: VerifyEmailResponseDto })
   verifyEmail(@Body() dto: VerifyEmailDto, @Req() req: Request) {
     return this.authService.verifyEmail(dto.token, this.extractContext(req));
+  }
+
+  @Post('resend-registration-verification')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Resend organisation registration verification email',
+  })
+  @ApiBody({ type: ResendRegistrationVerificationDto })
+  @ApiOkResponse({ type: MessageAuthResponseDto })
+  resendRegistrationVerification(
+    @Body() dto: ResendRegistrationVerificationDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.resendRegistrationVerification(
+      dto.email,
+      this.extractContext(req),
+    );
   }
 
   @Post('resend-verification')

@@ -23,7 +23,7 @@ async function main() {
 
   const users = await Promise.all([
     prisma.user.upsert({
-      where: { organisationId_email: { organisationId: organisation.id, email: 'admin@demo.com' } },
+      where: { email: 'admin@demo.com' },
       update: {},
       create: {
         email: 'admin@demo.com',
@@ -35,7 +35,7 @@ async function main() {
       },
     }),
     prisma.user.upsert({
-      where: { organisationId_email: { organisationId: organisation.id, email: 'finance@demo.com' } },
+      where: { email: 'finance@demo.com' },
       update: {},
       create: {
         email: 'finance@demo.com',
@@ -47,7 +47,7 @@ async function main() {
       },
     }),
     prisma.user.upsert({
-      where: { organisationId_email: { organisationId: organisation.id, email: 'procurement@demo.com' } },
+      where: { email: 'procurement@demo.com' },
       update: {},
       create: {
         email: 'procurement@demo.com',
@@ -59,7 +59,7 @@ async function main() {
       },
     }),
     prisma.user.upsert({
-      where: { organisationId_email: { organisationId: organisation.id, email: 'depthead@demo.com' } },
+      where: { email: 'depthead@demo.com' },
       update: {},
       create: {
         email: 'depthead@demo.com',
@@ -71,7 +71,7 @@ async function main() {
       },
     }),
     prisma.user.upsert({
-      where: { organisationId_email: { organisationId: organisation.id, email: 'vendor@demo.com' } },
+      where: { email: 'vendor@demo.com' },
       update: {},
       create: {
         email: 'vendor@demo.com',

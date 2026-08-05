@@ -78,21 +78,14 @@ export function useLogin() {
 
 export function useRegister() {
   const router = useRouter();
-  const setSession = useAuthStore((state) => state.setSession);
-  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (values: RegisterFormValues) => authRepository.register(values),
-    onSuccess: (data, variables) => {
-      applySession(data, variables.rememberMe, setSession);
-      queryClient.invalidateQueries({ queryKey: authQueryKeys.profile });
-      toast.success("Account created successfully");
-      if (!data.user.isVerified) {
-        toast.message("Verify your email", {
-          description: "We sent a verification link to your inbox.",
-        });
-      }
-      router.push("/dashboard");
+    onSuccess: (data) => {
+      toast.success("Check your email");
+      router.push(
+        `/register/pending?email=${encodeURIComponent(data.email)}`,
+      );
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -135,10 +128,26 @@ export function useResetPassword() {
 }
 
 export function useVerifyEmail() {
+  const router = useRouter();
+  const setSession = useAuthStore((state) => state.setSession);
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (token: string) => authRepository.verifyEmail(token),
     onSuccess: (data) => {
       toast.success(data.message);
+
+      if (data.user && data.accessToken && data.refreshToken) {
+        setSession({
+          user: data.user,
+          organisation: data.organisation ?? null,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          rememberMe: true,
+        });
+        queryClient.invalidateQueries({ queryKey: authQueryKeys.profile });
+        router.push("/dashboard");
+      }
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

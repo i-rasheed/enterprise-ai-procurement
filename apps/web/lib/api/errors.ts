@@ -1,5 +1,9 @@
 import type { AxiosError } from "axios";
 
+import {
+  formatErrorMessage,
+  shouldFormatForClient,
+} from "./format-error-message";
 import type { ApiErrorResponse } from "./types";
 
 export class ApiClientError extends Error {
@@ -21,26 +25,64 @@ export class ApiClientError extends Error {
   }
 }
 
+function normalizeMessage(message: string, statusCode: number): string {
+  const trimmed = message.trim();
+  if (!trimmed) {
+    return statusCode >= 500
+      ? "Internal server error"
+      : "Request failed. Please try again.";
+  }
+
+  if (shouldFormatForClient(trimmed) || statusCode >= 500) {
+    return formatErrorMessage(trimmed);
+  }
+
+  return stripPlainText(trimmed);
+}
+
+function stripPlainText(message: string): string {
+  return message.replace(/`/g, "").replace(/\s+/g, " ").trim();
+}
+
 export function parseApiError(error: unknown): ApiClientError {
   if (error instanceof ApiClientError) {
     return error;
   }
 
-  const axiosError = error as AxiosError<ApiErrorResponse>;
+  const axiosError = error as AxiosError<
+    ApiErrorResponse | { statusCode?: number; message?: string | string[] }
+  >;
 
-  if (axiosError.response?.data?.error) {
-    const { code, message, details } = axiosError.response.data.error;
-    return new ApiClientError(
-      message,
-      axiosError.response.status,
-      code,
-      details,
-    );
+  if (axiosError.response?.data) {
+    const data = axiosError.response.data;
+
+    if ("error" in data && data.error?.message) {
+      const { code, message, details } = data.error;
+      return new ApiClientError(
+        normalizeMessage(message, axiosError.response.status),
+        axiosError.response.status,
+        code,
+        details,
+      );
+    }
+
+    if ("message" in data && data.message) {
+      const message = Array.isArray(data.message)
+        ? data.message.join(", ")
+        : data.message;
+      return new ApiClientError(
+        normalizeMessage(message, axiosError.response.status),
+        axiosError.response.status,
+      );
+    }
   }
 
   if (axiosError.response?.status) {
     return new ApiClientError(
-      axiosError.message || "Request failed",
+      normalizeMessage(
+        axiosError.message || "Request failed",
+        axiosError.response.status,
+      ),
       axiosError.response.status,
     );
   }
@@ -54,7 +96,10 @@ export function parseApiError(error: unknown): ApiClientError {
   }
 
   return new ApiClientError(
-    error instanceof Error ? error.message : "Unexpected error",
+    normalizeMessage(
+      error instanceof Error ? error.message : "Unexpected error",
+      500,
+    ),
     500,
   );
 }

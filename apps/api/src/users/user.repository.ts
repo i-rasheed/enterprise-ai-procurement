@@ -14,12 +14,10 @@ export class UserRepository {
   }
 
   findByEmailAndOrganisation(email: string, organisationId: string) {
-    return this.prisma.user.findUnique({
+    return this.prisma.user.findFirst({
       where: {
-        organisationId_email: {
-          organisationId,
-          email,
-        },
+        email,
+        organisationId,
       },
     });
   }

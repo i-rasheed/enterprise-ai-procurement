@@ -12,6 +12,7 @@ describe('Auth session (e2e)', () => {
   let organisationId: string;
   let refreshToken: string;
   let accessToken: string;
+  let verificationToken: string;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -21,7 +22,7 @@ describe('Auth session (e2e)', () => {
     await app.close();
   });
 
-  it('registers tenant and returns organisation', async () => {
+  it('registers tenant pending email verification', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
@@ -33,6 +34,20 @@ describe('Auth session (e2e)', () => {
       })
       .expect(201);
 
+    expect(response.body.verificationRequired).toBe(true);
+    expect(response.body.email).toBe(email);
+    expect(response.body.verificationToken).toBeDefined();
+
+    verificationToken = response.body.verificationToken as string;
+  });
+
+  it('creates organisation after email verification', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/auth/verify-email')
+      .send({ token: verificationToken })
+      .expect(200);
+
+    expect(response.body.isVerified).toBe(true);
     expect(response.body.organisation).toBeDefined();
     expect(response.body.organisation.name).toBe(organisationName);
     expect(response.body.user.organisationId).toBe(

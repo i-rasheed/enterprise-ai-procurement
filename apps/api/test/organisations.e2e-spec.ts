@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { createTestApp } from './helpers/create-test-app';
+import { registerAndVerifyTestTenant } from './helpers/register-test-tenant';
 
 describe('Organisations tenant (e2e)', () => {
   let app: INestApplication;
@@ -20,21 +21,18 @@ describe('Organisations tenant (e2e)', () => {
   });
 
   it('registers a tenant and admin user', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        organisationName,
-        email,
-        password,
-        firstName: 'Test',
-        lastName: 'Admin',
-      })
-      .expect(201);
+    const response = await registerAndVerifyTestTenant(app, {
+      organisationName,
+      email,
+      password,
+      firstName: 'Test',
+      lastName: 'Admin',
+    });
 
-    expect(response.body.user.email).toBe(email);
-    expect(response.body.user.role).toBe('ADMIN');
-    expect(response.body.organisation.name).toBe(organisationName);
-    accessToken = response.body.accessToken as string;
+    expect(response.user.email).toBe(email);
+    expect(response.user.role).toBe('ADMIN');
+    expect(response.organisation.name).toBe(organisationName);
+    accessToken = response.accessToken as string;
   });
 
   it('returns 401 for protected route without token', async () => {

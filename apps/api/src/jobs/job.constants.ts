@@ -6,14 +6,18 @@ export const QUEUE_NAMES = {
   SCHEDULED: 'scheduled-tasks',
 } as const;
 
-export type EmailJobData = {
-  to: string;
-  subject: string;
-  html?: string;
-  text?: string;
-  templateKey?: string;
-  variables?: Record<string, string>;
-};
+export type EmailJobData =
+  | {
+      to: string;
+      templateKey: string;
+      variables?: Record<string, string>;
+    }
+  | {
+      to: string;
+      subject: string;
+      html?: string;
+      text?: string;
+    };
 
 export type NotificationJobData = {
   userId: string;
@@ -36,6 +40,7 @@ export type ScheduledJobData = {
     | 'contract-reminders'
     | 'invoice-reminders'
     | 'cleanup-expired-tokens'
+    | 'cleanup-pending-registrations'
     | 'cleanup-old-audit-logs';
 };
 
