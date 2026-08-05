@@ -1,20 +1,18 @@
-# Railway config for the Docs service.
-# Dashboard: Root Directory = / (repo root)
-# Dashboard: Railway Config File = /apps/docs/railway.toml
+# Railway config for the Docs service (auto-detected when Root Directory = apps/docs).
 
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "apps/docs/Dockerfile"
+builder = "RAILPACK"
+buildCommand = "pnpm --filter docs build"
 watchPatterns = [
   "apps/docs/**",
   "packages/**",
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
-  "turbo.json",
 ]
 
 [deploy]
+startCommand = "HOSTNAME=0.0.0.0 node .next/standalone/apps/docs/server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

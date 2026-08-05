@@ -1,13 +1,9 @@
-# Mobile (Expo) is not deployed on Railway. Delete this service in the dashboard,
-# or leave it with this config to avoid monorepo turbo build failures.
-#
-# Dashboard: Root Directory = / (repo root)
-# Dashboard: Railway Config File = /apps/mobile/railway.toml
+# Mobile (Expo) is not hosted on Railway — delete this service if you do not need it.
 
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "apps/mobile/Dockerfile"
-watchPatterns = ["apps/mobile/**"]
+builder = "RAILPACK"
+buildCommand = "pnpm --filter mobile build"
 
 [deploy]
+startCommand = "node -e \"require('http').createServer((_,r)=>r.end('SpendWise mobile uses Expo EAS, not Railway.')).listen(process.env.PORT||8080)\""
 restartPolicyType = "NEVER"

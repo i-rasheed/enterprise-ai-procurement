@@ -1,0 +1,15 @@
+# Fallback config when a service uses the repository root (/).
+# Prefer setting each service Root Directory to its app folder (apps/api, apps/web, …)
+# so the matching apps/*/railway.toml is picked up automatically.
+#
+# If this service is the API, set Railway Config File to /railway.toml and rename
+# the service to "api". For web, use /apps/web/railway.toml instead.
+
+[build]
+builder = "RAILPACK"
+buildCommand = "pnpm --filter api build"
+
+[deploy]
+startCommand = "cd apps/api && npx prisma migrate deploy --schema=prisma/schema.prisma && node dist/main.js"
+healthcheckPath = "/api/v1/health/ready"
+healthcheckTimeout = 300
