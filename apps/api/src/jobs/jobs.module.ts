@@ -21,11 +21,20 @@ import { JobService } from './job.service';
     EmailModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          url: configService.get<string>('REDIS_URL', 'redis://localhost:6379'),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const url = configService.get<string>('REDIS_URL');
+        return {
+          connection: url
+            ? { url }
+            : {
+                host: '127.0.0.1',
+                port: 6379,
+                lazyConnect: true,
+                maxRetriesPerRequest: null,
+                enableOfflineQueue: false,
+              },
+        };
+      },
       inject: [ConfigService],
     }),
     BullModule.registerQueue(
