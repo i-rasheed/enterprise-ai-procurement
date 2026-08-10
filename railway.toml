@@ -11,5 +11,5 @@ buildCommand = "pnpm --filter api build"
 
 [deploy]
 startCommand = "cd apps/api && npx prisma migrate deploy --schema=prisma/schema.prisma && node dist/main.js"
-healthcheckPath = "/api/v1/health/ready"
+healthcheckPath = "/api/v1/health/live"
 healthcheckTimeout = 300

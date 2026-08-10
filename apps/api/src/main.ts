@@ -70,7 +70,7 @@ async function bootstrap() {
   });
 
   const port = configService.get<number>('PORT', 3001);
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   const logger = app.get(Logger);
   logger.log(`API running at http://localhost:${port}/api/v1`);

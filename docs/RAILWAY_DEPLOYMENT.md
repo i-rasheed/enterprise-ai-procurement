@@ -75,6 +75,17 @@ In **api** → **Variables**, set:
 
 Reference plugin URLs with Railway’s variable syntax, e.g. `${{Postgres.DATABASE_URL}}`.
 
+**Required before first deploy** — without these the API crashes on startup:
+
+| Variable | Example |
+|----------|---------|
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `JWT_ACCESS_SECRET` | random 32+ character string |
+| `JWT_REFRESH_SECRET` | random 32+ character string |
+| `NODE_ENV` | `production` |
+
+Optional but recommended: add a **Redis** plugin and set `REDIS_URL=${{Redis.REDIS_URL}}` for background jobs and email.
+
 Optional: Paystack, OpenAI, S3 — see [Environment Variables](./ENVIRONMENT.md).
 
 ## 4. Create the Web service
