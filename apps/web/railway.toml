@@ -1,9 +1,13 @@
-# Railway config for the Web service (auto-detected when Root Directory = apps/web).
-# If the web service does not exist: + New → GitHub Repo → same repo → rename to "web"
+# Railway config for the Web service.
+# Dashboard: Root Directory = /  (repo root — required for Docker monorepo context)
+# Dashboard: Railway Config File = /apps/web/railway.toml
+#
+# Set these service variables before deploy (baked in at build time):
+#   NEXT_PUBLIC_API_URL, NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_APP_NAME
 
 [build]
-builder = "RAILPACK"
-buildCommand = "pnpm --filter web build"
+builder = "DOCKERFILE"
+dockerfilePath = "apps/web/Dockerfile"
 watchPatterns = [
   "apps/web/**",
   "packages/**",
@@ -13,7 +17,6 @@ watchPatterns = [
 ]
 
 [deploy]
-startCommand = "HOSTNAME=0.0.0.0 node .next/standalone/apps/web/server.js"
 healthcheckPath = "/login"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
