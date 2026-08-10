@@ -77,4 +77,7 @@ async function bootstrap() {
   logger.log(`Swagger available at http://localhost:${port}/docs`);
 }
 
-void bootstrap();
+void bootstrap().catch((error: unknown) => {
+  console.error('API failed to start:', error);
+  process.exit(1);
+});
