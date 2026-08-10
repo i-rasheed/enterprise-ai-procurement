@@ -11,7 +11,7 @@ Leave the default **Root Directory** as the app folder (e.g. `apps/api`) so Rail
 | Service | Root Directory | Config file (auto or manual) |
 |---------|----------------|------------------------------|
 | **api** | `/` | `/apps/api/railway.toml` |
-| **web** | `web` | `apps/web/railway.toml` |
+| **web** | `/` | `/apps/web/railway.toml` |
 | **docs** | `apps/docs` | `apps/docs/railway.toml` |
 | **mobile** | — | Delete this service (Expo app) |
 
@@ -95,7 +95,8 @@ Railway often skips **web** during monorepo import — add it manually:
 1. **+ New** → **GitHub Repo** → same repository
 2. Rename to `web`
 3. **Settings** → **Build**:
-   - **Root Directory:** `apps/web`
+   - **Root Directory:** `/` (repo root — required for Docker)
+   - **Railway Config File:** `/apps/web/railway.toml`
    - Set these **service variables** before the first deploy (baked in at build time):
 
      | Variable | Value |

@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build --webpack",
+    "start": "HOSTNAME=0.0.0.0 node .next/standalone/apps/web/server.js",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit",
     "test": "vitest run",
