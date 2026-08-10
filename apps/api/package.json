@@ -9,7 +9,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "prisma generate && nest build",
+    "build": "prisma generate && nest build && node scripts/copy-prisma-for-deploy.mjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "nest start --watch",
     "start": "node dist/main.js",
