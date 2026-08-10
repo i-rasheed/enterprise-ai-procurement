@@ -162,6 +162,7 @@ pnpm dev
 | API crash on boot | Check **Deploy Logs** — usually missing `DATABASE_URL` or JWT secrets |
 | CORS errors in browser | Set `CORS_ORIGINS` to exact web URL (no trailing slash) |
 | Web shows wrong API | Rebuild web with correct `NEXT_PUBLIC_API_URL` build arg |
+| **Node.js version error (Next.js)** | Repo requires Node 22 — set `RAILPACK_NODE_VERSION=22` on the service if build still uses Node 18 |
 | Emails not sending | Confirm SMTP vars; Gmail needs app password + port `465` |
 | Migrations failed | Ensure Postgres plugin is linked; check `DATABASE_URL` |
 | **No start command detected** | Set Root Directory to the app folder (`apps/api`, `apps/web`, …), not `/` |
