@@ -9,10 +9,11 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "prisma generate && nest build",
+    "build": "prisma generate && nest build && node scripts/copy-prisma-for-deploy.mjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "nest start --watch",
-    "start": "nest start",
+    "start": "node dist/main.js",
+    "railway:start": "pnpm exec prisma migrate deploy --schema=dist/prisma/schema.prisma && node dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
