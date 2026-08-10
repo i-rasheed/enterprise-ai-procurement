@@ -25,10 +25,11 @@ ENV NODE_ENV=production
 COPY --from=build /app/apps/api/dist ./dist
 COPY --from=build /app/apps/api/package.json ./
 COPY --from=build /app/apps/api/prisma ./prisma
+COPY --from=build /app/apps/api/dist/prisma ./dist/prisma
 COPY --from=build /app/node_modules ./node_modules
 COPY scripts/railway-start-api.sh ./start.sh
 RUN chmod +x ./start.sh
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget -qO- http://localhost:3001/api/v1/health/ready || exit 1
+  CMD wget -qO- http://localhost:3001/api/v1/health/live || exit 1
 CMD ["./start.sh"]
