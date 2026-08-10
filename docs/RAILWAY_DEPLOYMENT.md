@@ -10,8 +10,8 @@ Leave the default **Root Directory** as the app folder (e.g. `apps/api`) so Rail
 
 | Service | Root Directory | Config file (auto or manual) |
 |---------|----------------|------------------------------|
-| **api** | `apps/api` | `apps/api/railway.toml` |
-| **web** | `apps/web` | `apps/web/railway.toml` |
+| **api** | `/` | `/apps/api/railway.toml` |
+| **web** | `web` | `apps/web/railway.toml` |
 | **docs** | `apps/docs` | `apps/docs/railway.toml` |
 | **mobile** | — | Delete this service (Expo app) |
 
@@ -46,8 +46,8 @@ Railway injects `DATABASE_URL` and `REDIS_URL` into services that reference them
 1. **+ New** → **GitHub Repo** → same repository (or duplicate the existing service)
 2. Rename the service to `api`
 3. **Settings** → **Build**:
-   - **Root Directory:** `apps/api`
-   - (Config file `apps/api/railway.toml` is picked up automatically)
+   - **Root Directory:** `/` (repo root — required for Docker)
+   - **Railway Config File:** `/apps/api/railway.toml`
 4. **Settings** → **Networking** → **Generate Domain** (e.g. `spendwise-api-production.up.railway.app`)
 5. **Settings** → **Deploy** → **Healthcheck Path:** `/api/v1/health/ready`
 
