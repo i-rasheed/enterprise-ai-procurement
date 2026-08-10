@@ -5,7 +5,7 @@ export async function GET() {
   const filePath = join(process.cwd(), "public", "SpendWise-User-Guide.pdf");
   const buffer = await readFile(filePath);
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": 'attachment; filename="SpendWise-User-Guide.pdf"',
