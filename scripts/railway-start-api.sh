@@ -27,4 +27,4 @@ echo "Running database migrations with schema: $SCHEMA"
 ./node_modules/.bin/prisma migrate deploy --schema="$SCHEMA"
 
 echo "Starting API on port ${PORT:-3001}..."
-exec node dist/main.js
+exec node dist/src/main.js
