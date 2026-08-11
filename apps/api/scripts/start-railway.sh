@@ -32,4 +32,4 @@ echo "Running database migrations with schema: $SCHEMA"
 pnpm exec prisma migrate deploy --schema="$SCHEMA"
 
 echo "Starting API on port ${PORT:-3001}..."
-exec node dist/main.js
+exec node dist/src/main.js
