@@ -26,7 +26,9 @@ COPY --from=build /app/apps/api/dist ./dist
 COPY --from=build /app/apps/api/package.json ./
 COPY --from=build /app/apps/api/prisma ./prisma
 COPY --from=build /app/apps/api/dist/prisma ./dist/prisma
+# pnpm keeps the prisma CLI under apps/api/node_modules/.bin — merge into /app/node_modules
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/api/node_modules ./node_modules
 COPY scripts/railway-start-api.sh ./start.sh
 RUN chmod +x ./start.sh
 EXPOSE 3001
