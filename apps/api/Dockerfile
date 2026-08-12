@@ -20,7 +20,7 @@ RUN pnpm --filter api build
 
 FROM base AS deploy
 COPY --from=build /app .
-RUN pnpm deploy --filter=api --prod /prod/api
+RUN pnpm deploy --filter=api --prod --legacy /prod/api
 
 FROM node:22-alpine AS production
 ENV NODE_ENV=production
