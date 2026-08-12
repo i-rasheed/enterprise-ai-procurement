@@ -23,15 +23,32 @@ else
   exit 1
 fi
 
-echo "Running database migrations with schema: $SCHEMA"
-if [ -x ./node_modules/.bin/prisma ]; then
-  ./node_modules/.bin/prisma migrate deploy --schema="$SCHEMA"
-elif command -v pnpm >/dev/null 2>&1; then
-  pnpm exec prisma migrate deploy --schema="$SCHEMA"
-else
-  echo "ERROR: prisma CLI not found in ./node_modules/.bin"
+run_prisma_migrate() {
+  if [ -x ./node_modules/.bin/prisma ]; then
+    ./node_modules/.bin/prisma migrate deploy --schema="$SCHEMA"
+    return
+  fi
+
+  for cli in \
+    /app/node_modules/.pnpm/prisma@*/node_modules/prisma/build/index.js \
+    ./node_modules/.pnpm/prisma@*/node_modules/prisma/build/index.js; do
+    if [ -f "$cli" ]; then
+      node "$cli" migrate deploy --schema="$SCHEMA"
+      return
+    fi
+  done
+
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm exec prisma migrate deploy --schema="$SCHEMA"
+    return
+  fi
+
+  echo "ERROR: prisma CLI not found."
   exit 1
-fi
+}
+
+echo "Running database migrations with schema: $SCHEMA"
+run_prisma_migrate
 
 echo "Starting API on port ${PORT:-3001}..."
 exec node dist/src/main.js
