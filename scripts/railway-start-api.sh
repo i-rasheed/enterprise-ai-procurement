@@ -29,19 +29,12 @@ run_prisma_migrate() {
     return
   fi
 
-  for cli in \
-    /app/node_modules/.pnpm/prisma@*/node_modules/prisma/build/index.js \
-    ./node_modules/.pnpm/prisma@*/node_modules/prisma/build/index.js; do
+  for cli in ./node_modules/.pnpm/prisma@*/node_modules/prisma/build/index.js; do
     if [ -f "$cli" ]; then
       node "$cli" migrate deploy --schema="$SCHEMA"
       return
     fi
   done
-
-  if command -v pnpm >/dev/null 2>&1; then
-    pnpm exec prisma migrate deploy --schema="$SCHEMA"
-    return
-  fi
 
   echo "ERROR: prisma CLI not found."
   exit 1

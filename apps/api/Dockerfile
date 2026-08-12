@@ -18,17 +18,14 @@ COPY . .
 ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
 RUN pnpm --filter api build
 
+FROM base AS deploy
+COPY --from=build /app .
+RUN pnpm deploy --filter=api --prod /prod/api
+
 FROM node:22-alpine AS production
-RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
 ENV NODE_ENV=production
-# Keep pnpm's workspace layout — flattening node_modules breaks prisma symlinks.
-WORKDIR /app/apps/api
-COPY --from=build /app/node_modules /app/node_modules
-COPY --from=build /app/apps/api/node_modules ./node_modules
-COPY --from=build /app/apps/api/dist ./dist
-COPY --from=build /app/apps/api/package.json ./package.json
-COPY --from=build /app/apps/api/prisma ./prisma
-COPY --from=build /app/apps/api/dist/prisma ./dist/prisma
+WORKDIR /app
+COPY --from=deploy /prod/api .
 COPY scripts/railway-start-api.sh ./start.sh
 RUN chmod +x ./start.sh
 EXPOSE 3001
