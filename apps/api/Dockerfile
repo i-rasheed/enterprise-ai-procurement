@@ -30,6 +30,9 @@ COPY --from=deploy /prod/api .
 COPY --from=build /app/apps/api/dist ./dist
 COPY scripts/railway-start-api.sh ./start.sh
 RUN chmod +x ./start.sh
+# pnpm deploy omits generated client — regenerate for this node_modules layout
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
+RUN ./node_modules/.bin/prisma generate --schema=./dist/prisma/schema.prisma
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD wget -qO- "http://127.0.0.1:${PORT:-3001}/api/v1/health/live" || exit 1

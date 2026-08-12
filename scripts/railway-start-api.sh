@@ -23,14 +23,19 @@ else
   exit 1
 fi
 
-run_prisma_migrate() {
+run_prisma() {
+  echo "Generating Prisma Client..."
+  echo "Running database migrations..."
+
   if [ -x ./node_modules/.bin/prisma ]; then
+    ./node_modules/.bin/prisma generate --schema="$SCHEMA"
     ./node_modules/.bin/prisma migrate deploy --schema="$SCHEMA"
     return
   fi
 
   for cli in ./node_modules/.pnpm/prisma@*/node_modules/prisma/build/index.js; do
     if [ -f "$cli" ]; then
+      node "$cli" generate --schema="$SCHEMA"
       node "$cli" migrate deploy --schema="$SCHEMA"
       return
     fi
@@ -40,8 +45,7 @@ run_prisma_migrate() {
   exit 1
 }
 
-echo "Running database migrations with schema: $SCHEMA"
-run_prisma_migrate
+run_prisma
 
 echo "Starting API on port ${PORT:-3001}..."
 exec node dist/src/main.js
