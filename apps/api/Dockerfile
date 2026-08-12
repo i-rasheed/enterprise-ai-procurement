@@ -26,6 +26,8 @@ FROM node:22-alpine AS production
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=deploy /prod/api .
+# pnpm deploy skips gitignored build output — copy dist explicitly
+COPY --from=build /app/apps/api/dist ./dist
 COPY scripts/railway-start-api.sh ./start.sh
 RUN chmod +x ./start.sh
 EXPOSE 3001
