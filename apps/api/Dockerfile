@@ -20,18 +20,18 @@ RUN pnpm --filter api build
 
 FROM node:22-alpine AS production
 RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
-WORKDIR /app
 ENV NODE_ENV=production
+# Keep pnpm's workspace layout — flattening node_modules breaks prisma symlinks.
+WORKDIR /app/apps/api
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/apps/api/node_modules ./node_modules
 COPY --from=build /app/apps/api/dist ./dist
-COPY --from=build /app/apps/api/package.json ./
+COPY --from=build /app/apps/api/package.json ./package.json
 COPY --from=build /app/apps/api/prisma ./prisma
 COPY --from=build /app/apps/api/dist/prisma ./dist/prisma
-# pnpm keeps the prisma CLI under apps/api/node_modules/.bin — merge into /app/node_modules
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/api/node_modules ./node_modules
 COPY scripts/railway-start-api.sh ./start.sh
 RUN chmod +x ./start.sh
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget -qO- http://localhost:3001/api/v1/health/live || exit 1
+  CMD wget -qO- "http://127.0.0.1:${PORT:-3001}/api/v1/health/live" || exit 1
 CMD ["./start.sh"]
